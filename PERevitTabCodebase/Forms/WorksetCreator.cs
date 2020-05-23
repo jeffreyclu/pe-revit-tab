@@ -109,7 +109,7 @@ namespace PERevitTab.Forms
         {
             // Create COM Objects. Create a COM object for everything that is referenced
             Excel.Application xlApp = new Excel.Application();
-            Excel.Workbook xlWorkbook = xlApp.Workbooks.Open(@"C:\Temp\worksets.xlsx");
+            Excel.Workbook xlWorkbook = xlApp.Workbooks.Open(@"\\d-peapcny.net\enterprise\G_Gen-Admin\Committees\Data Unit\01_TEAMS\AUTOMATION\PE Revit Tab\PERevitTabCodebase\PERevitTabCodebase\Assets\Excel\worksets.xlsx");
             Excel._Worksheet xlWorksheet = xlWorkbook.Sheets[1];
             Excel.Range xlRange = xlWorksheet.UsedRange;
 
