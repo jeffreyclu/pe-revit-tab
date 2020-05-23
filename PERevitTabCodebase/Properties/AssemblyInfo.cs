@@ -5,12 +5,12 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("PERevitTabCodebase")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyTitle("PERevitTab")]
+[assembly: AssemblyDescription("PE Revit Tools")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("PERevitTabCodebase")]
-[assembly: AssemblyCopyright("Copyright ©  2020")]
+[assembly: AssemblyCompany("Perkins Eastman")]
+[assembly: AssemblyProduct("PERevitTab")]
+[assembly: AssemblyCopyright("Copyright PE DT DU ©  2020")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
