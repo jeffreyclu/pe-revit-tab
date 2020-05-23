@@ -46,10 +46,10 @@ namespace PERevitTab
 
                 #region DT panel
                 // button 1 image
-                BitmapImage modelMetricsImg = new BitmapImage(new Uri(@"\\d-peapcny.net\enterprise\G_Gen-Admin\Committees\Data Unit\01_TEAMS\AUTOMATION\PE Revit Tab\PERevitTabCodebase\Assets\Images\duBtn.png")); // add the uri
+                BitmapImage modelMetricsImg = new BitmapImage(new Uri(@"\\d-peapcny.net\enterprise\G_Gen-Admin\Committees\Data Unit\01_TEAMS\AUTOMATION\PE Revit Tab\PERevitTabCodebase\PERevitTabCodebase\Assets\Images\duBtn.png")); // add the uri
 
                 // button 2 image
-                BitmapImage createWorksetsImg = new BitmapImage(new Uri(@"\\d-peapcny.net\enterprise\G_Gen-Admin\Committees\Data Unit\01_TEAMS\AUTOMATION\PE Revit Tab\Assets\Images\duBtn.png")); // add the uri
+                BitmapImage createWorksetsImg = new BitmapImage(new Uri(@"\\d-peapcny.net\enterprise\G_Gen-Admin\Committees\Data Unit\01_TEAMS\AUTOMATION\PE Revit Tab\PERevitTabCodebase\PERevitTabCodebase\Assets\Images\duBtn.png")); // add the uri
 
                 // button 1
                 PushButtonData modelMetricsData = new PushButtonData("Model Metrics", "Run \n" + "Model Metrics", assemblyPath, "PERevitTab.Commands.DT.ModelMetrics");
@@ -66,13 +66,13 @@ namespace PERevitTab
 
                 #region DU panel
                 // button 1 image
-                BitmapImage runDynamo1Img = new BitmapImage(new Uri(@"\\d-peapcny.net\enterprise\G_Gen-Admin\Committees\Data Unit\01_TEAMS\AUTOMATION\PE Revit Tab\Assets\Images\duBtn.png")); // add the uri
+                BitmapImage runDynamo1Img = new BitmapImage(new Uri(@"\\d-peapcny.net\enterprise\G_Gen-Admin\Committees\Data Unit\01_TEAMS\AUTOMATION\PE Revit Tab\PERevitTabCodebase\PERevitTabCodebase\Assets\Images\duBtn.png")); // add the uri
 
                 // button 2 image
-                BitmapImage runDynamo2Img = new BitmapImage(new Uri(@"\\d-peapcny.net\enterprise\G_Gen-Admin\Committees\Data Unit\01_TEAMS\AUTOMATION\PE Revit Tab\Assets\Images\duBtn.png")); // add the uri
+                BitmapImage runDynamo2Img = new BitmapImage(new Uri(@"\\\\d-peapcny.net\enterprise\G_Gen-Admin\Committees\Data Unit\01_TEAMS\AUTOMATION\PE Revit Tab\PERevitTabCodebase\PERevitTabCodebase\Assets\Images\duBtn.png")); // add the uri
 
                 // button 3 image
-                BitmapImage runDynamo3Img = new BitmapImage(new Uri(@"\\d-peapcny.net\enterprise\G_Gen-Admin\Committees\Data Unit\01_TEAMS\AUTOMATION\PE Revit Tab\Assets\Images\duBtn.png")); // add the uri
+                BitmapImage runDynamo3Img = new BitmapImage(new Uri(@"\\\\d-peapcny.net\enterprise\G_Gen-Admin\Committees\Data Unit\01_TEAMS\AUTOMATION\PE Revit Tab\PERevitTabCodebase\PERevitTabCodebase\Assets\Images\duBtn.png")); // add the uri
 
                 // button 1
                 PushButtonData runDynamo1Data = new PushButtonData("Renumber Views", "Renumber \n" + "Views on Sheets", assemblyPath, "PERevitTab.Commands.DU.RunDynamo1");
