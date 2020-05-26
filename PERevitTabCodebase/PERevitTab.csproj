@@ -108,9 +108,9 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Assets\Images\duBtn.png" />
-    <Content Include="Assets\Images\modelMetricsBtn.png" />
-    <Content Include="Assets\Images\worksetCreatorBtn.png" />
+    <Resource Include="Assets\Images\duBtn.png" />
+    <Resource Include="Assets\Images\modelMetricsBtn.png" />
+    <Resource Include="Assets\Images\worksetCreatorBtn.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
