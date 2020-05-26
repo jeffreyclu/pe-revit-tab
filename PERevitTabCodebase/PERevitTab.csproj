@@ -71,6 +71,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="MainDBApplication.cs" />
     <Compile Include="MainApplication.cs" />
     <Compile Include="Commands\DT\CreateWorksets.cs" />
     <Compile Include="Commands\DT\ModelMetrics.cs" />
@@ -102,7 +103,7 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Assets\Excel\worksets.xlsx" />
+    <Resource Include="Assets\Excel\worksets.xlsx" />
     <None Include="PERevitTab.addin">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

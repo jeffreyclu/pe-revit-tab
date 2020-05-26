@@ -29,6 +29,7 @@ namespace PERevitTab.Forms
         private List<string> selectedWorksetNames = new List<string>();
         private ExternalCommandData extCommandData;
         #endregion
+        #region main functions
         public WorksetCreator(ExternalCommandData commandData)
         {
             extCommandData = commandData;
@@ -51,6 +52,36 @@ namespace PERevitTab.Forms
             }
         }
 
+        private object[] GenerateWorksetNames()
+        {
+            // Create COM Objects. Create a COM object for everything that is referenced
+            Excel.Application xlApp = new Excel.Application();
+            Excel.Workbook xlWorkbook = xlApp.Workbooks.Open("pack://application:,,,/PERevitTab;component/Assets/Excel/worksets.xlsx");
+            Excel._Worksheet xlWorksheet = xlWorkbook.Sheets[1];
+            Excel.Range xlRange = xlWorksheet.UsedRange;
+
+            List<string> worksetNames = new List<string>();
+
+            for (int i = 2; i <= 100; i++)
+            {
+                if (xlRange.Cells[i, 1] != null && xlRange.Cells[i, 1].Value2 != null)
+                {
+                    worksetNames.Add(xlRange.Cells[i, 1].Value2.ToString());
+                }
+                else
+                {
+                    break;
+                }
+            }
+
+            //close and release
+            xlWorkbook.Close();
+            //quit and release
+            xlApp.Quit();
+            return worksetNames.Cast<object>().ToArray();
+        }
+        #endregion
+        #region event handlers
         private void button1_Click(object sender, EventArgs e)
         {
             Document doc = extCommandData.Application.ActiveUIDocument.Document;
@@ -105,38 +136,10 @@ namespace PERevitTab.Forms
             }
         }
 
-        private object[] GenerateWorksetNames()
-        {
-            // Create COM Objects. Create a COM object for everything that is referenced
-            Excel.Application xlApp = new Excel.Application();
-            Excel.Workbook xlWorkbook = xlApp.Workbooks.Open(@"\\d-peapcny.net\enterprise\G_Gen-Admin\Committees\Data Unit\01_TEAMS\AUTOMATION\PE Revit Tab\PERevitTabCodebase\PERevitTabCodebase\Assets\Excel\worksets.xlsx");
-            Excel._Worksheet xlWorksheet = xlWorkbook.Sheets[1];
-            Excel.Range xlRange = xlWorksheet.UsedRange;
-
-            List<string> worksetNames = new List<string>();
-
-            for (int i = 2; i <= 100; i++)
-            {
-                if (xlRange.Cells[i, 1] != null && xlRange.Cells[i, 1].Value2 != null)
-                {
-                    worksetNames.Add(xlRange.Cells[i, 1].Value2.ToString());
-                }
-                else
-                {
-                    break;
-                }
-            }
-
-            //close and release
-            xlWorkbook.Close();
-            //quit and release
-            xlApp.Quit();
-            return worksetNames.Cast<object>().ToArray();
-        }
-
         private void button2_Click(object sender, EventArgs e)
         {
             this.Close();
         }
+        #endregion
     }
 }

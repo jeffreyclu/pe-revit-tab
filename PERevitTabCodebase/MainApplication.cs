@@ -1,6 +1,9 @@
 ﻿#region autodesk libraries
 using Autodesk.Revit.Attributes;
 using Autodesk.Revit.UI;
+using Autodesk.Revit.UI.Events;
+using Autodesk.Revit.DB;
+using Autodesk.Revit.DB.Events;
 #endregion
 #region system libraries
 using System;
@@ -18,6 +21,11 @@ namespace PERevitTab
     [Regeneration(RegenerationOption.Manual)]
     public class MainApplication : IExternalApplication
     {
+        #region class variables
+        public static UIControlledApplication uiCtrlApp;
+        public bool worksharingEventSubscribed = false;
+        #endregion
+        #region main functions
         public Result OnShutdown(UIControlledApplication application)
         {
             return Result.Succeeded;
@@ -25,6 +33,7 @@ namespace PERevitTab
 
         public Result OnStartup(UIControlledApplication application)
         {
+            uiCtrlApp = application;
             try
             {
                 #region initial setup
@@ -92,6 +101,10 @@ namespace PERevitTab
                 runDynamo3.LargeImage = runDynamo3Img;
                 runDynamo3.ToolTip = "Choose a Sheet, then select view references (elevation and section tags, callouts) to be added to the sheet.";
                 #endregion
+
+                #region idling event
+                uiCtrlApp.Idling += OnIdling;
+                #endregion
             }
             catch (Exception err)
             {
@@ -100,5 +113,33 @@ namespace PERevitTab
             }
             return Result.Succeeded;
         }
+        #endregion
+        #region event handlers
+        private void OnIdling(object sender, IdlingEventArgs args)
+        {
+            UIApplication uiApp = sender as UIApplication;
+            uiApp.Idling -= OnIdling;
+            if (worksharingEventSubscribed)
+            {
+                UIDocument uiDoc = uiApp.ActiveUIDocument;
+                Document doc = uiDoc.Document;
+                CreateWorksets(doc);
+            }
+            else
+            {
+                uiApp.Application.DocumentWorksharingEnabled += WorksharingEnabledEvent;
+            }
+        }
+        private void WorksharingEnabledEvent(object sender, DocumentWorksharingEnabledEventArgs args)
+        {
+            worksharingEventSubscribed = true;
+            uiCtrlApp.Idling += OnIdling;
+        }
+
+        private void CreateWorksets(Document doc)
+        {
+            TaskDialog.Show("Success", "Worksets Enabled");
+        }
+        #endregion
     }
 }

@@ -42,8 +42,7 @@ namespace PERevitTab.Commands.DT
             }
         }
 
-        /* MAIN FUNCTION */
-
+        #region main function
         /// <summary>
         /// Collects model metrics and returns a dictionary
         /// </summary>
@@ -113,9 +112,8 @@ namespace PERevitTab.Commands.DT
 
             return modelMetrics;
         }
-
-        /* MAIN HELPER FUNCTIONS */
-
+        #endregion
+        #region helper functions
         /// <summary>
         /// Collects non-RVT link and imports
         /// </summary>
@@ -230,7 +228,8 @@ namespace PERevitTab.Commands.DT
             }
             return unusedFamilySymbols;
         }
-
+        #endregion
+        #region todos
         /*
         public void GetGroupsInfo(Document doc, Dictionary<string, object> data)
         {
@@ -324,8 +323,8 @@ namespace PERevitTab.Commands.DT
             File.WriteAllText(csvPath, output.ToString());
         }
         */
-        /* UTILITY FUNCTIONS */
-
+        #endregion
+        #region utility functions
         /// <summary>
         /// Formats the current date and time in a human-readable format
         /// </summary>
@@ -447,5 +446,6 @@ namespace PERevitTab.Commands.DT
             output.AppendLine(currentLine.TrimEnd(','));
             File.AppendAllText(csvPath, output.ToString());
         }
+        #endregion
     }
 }
