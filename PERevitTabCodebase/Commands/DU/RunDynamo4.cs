@@ -20,7 +20,7 @@ namespace PERevitTab.Commands.DU
 {
     [Transaction(TransactionMode.Manual)]
     [Regeneration(RegenerationOption.Manual)]
-    class RunDynamo3 : IExternalCommand
+    class RunDynamo4 : IExternalCommand
     {
         public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
         {
@@ -31,7 +31,7 @@ namespace PERevitTab.Commands.DU
                 UIApplication uiapp = commandData.Application;
                 Document doc = uiapp.ActiveUIDocument.Document;
 
-                string Journal_Dynamo_Path = @"\\d-peapcny.net\enterprise\G_Gen-Admin\Committees\Data Unit\_SCRIPTS LIBRARY\DYNAMO\_Ready for the S drive\Dynamo Player\Views_Add Multple to Sheets by Selection- For Dynamo Player.dyn";
+                string Journal_Dynamo_Path = @"\\d-peapcny.net\enterprise\G_Gen-Admin\Committees\Data Unit\_SCRIPTS LIBRARY\DYNAMO\_Ready for the S drive\Dynamo Player\Views_Add Multple to Sheets by Selection- For Dynamo Player.dyn"; // update the link
 
                 // initialize a new dynamo instance
                 DynamoRevit dynamoRevit = new DynamoRevit();

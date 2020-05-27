@@ -71,6 +71,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Commands\DU\RunDynamo4.cs" />
     <Compile Include="MainApplication.cs" />
     <Compile Include="Commands\DT\CreateWorksets.cs" />
     <Compile Include="Commands\DT\ModelMetrics.cs" />

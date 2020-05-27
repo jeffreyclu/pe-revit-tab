@@ -73,6 +73,7 @@ namespace PERevitTab
                 #endregion
 
                 #region DU panel
+                // TODO add logging to keep track of how many times each button is used
                 // button 1 image
                 BitmapImage runDynamo1Img = new BitmapImage(new Uri("pack://application:,,,/PERevitTab;component/Assets/Images/duBtn.png")); // add the uri
 
@@ -81,6 +82,9 @@ namespace PERevitTab
 
                 // button 3 image
                 BitmapImage runDynamo3Img = new BitmapImage(new Uri("pack://application:,,,/PERevitTab;component/Assets/Images/duBtn.png")); // add the uri
+
+                // button 4 image
+                BitmapImage runDynamo4Img = new BitmapImage(new Uri("pack://application:,,,/PERevitTab;component/Assets/Images/duBtn.png")); // add the uri
 
                 // button 1
                 PushButtonData runDynamo1Data = new PushButtonData("Renumber Views", "Renumber \n" + "Views on Sheets", assemblyPath, "PERevitTab.Commands.DU.RunDynamo1");
@@ -99,6 +103,12 @@ namespace PERevitTab
                 PushButton runDynamo3 = duPanel.AddItem(runDynamo3Data) as PushButton;
                 runDynamo3.LargeImage = runDynamo3Img;
                 runDynamo3.ToolTip = "Choose a Sheet, then select view references (elevation and section tags, callouts) to be added to the sheet.";
+
+                //button 4
+                PushButtonData runDynamo4Data = new PushButtonData("Add Views to Sheets", "Add Views to \n" + "Sheets - Selection", assemblyPath, "PERevitTab.Commands.DU.RunDynamo4");
+                PushButton runDynamo4 = duPanel.AddItem(runDynamo4Data) as PushButton;
+                runDynamo4.LargeImage = runDynamo4Img;
+                runDynamo4.ToolTip = "Choose a Sheet, then select view references (elevation and section tags, callouts) to be added to the sheet.";
                 #endregion
 
                 #region idling event
