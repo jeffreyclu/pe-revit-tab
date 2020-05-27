@@ -27,12 +27,12 @@ namespace PERevitTab.Forms
         #region class variables
         private object[] worksetNames = new object[] { "New Workset 1", "New Workset 2", "New Workset 3" };
         private List<string> selectedWorksetNames = new List<string>();
-        private ExternalCommandData extCommandData;
+        private Document doc;
         #endregion
         #region main functions
-        public WorksetCreator(ExternalCommandData commandData)
+        public WorksetCreator(Document extDoc)
         {
-            extCommandData = commandData;
+            doc = extDoc;
             InitializeComponent();
         }
 
@@ -56,7 +56,7 @@ namespace PERevitTab.Forms
         {
             // Create COM Objects. Create a COM object for everything that is referenced
             Excel.Application xlApp = new Excel.Application();
-            Excel.Workbook xlWorkbook = xlApp.Workbooks.Open("pack://application:,,,/PERevitTab;component/Assets/Excel/worksets.xlsx");
+            Excel.Workbook xlWorkbook = xlApp.Workbooks.Open(@"\\d-peapcny\Enterprise\G_Gen-Admin\Committees\Data Unit\01_TEAMS\AUTOMATION\PE Revit Tab\PERevitTabCodebase\PERevitTabCodebase\Assets\Excel\worksets.xlsx");
             Excel._Worksheet xlWorksheet = xlWorkbook.Sheets[1];
             Excel.Range xlRange = xlWorksheet.UsedRange;
 
@@ -84,7 +84,7 @@ namespace PERevitTab.Forms
         #region event handlers
         private void button1_Click(object sender, EventArgs e)
         {
-            Document doc = extCommandData.Application.ActiveUIDocument.Document;
+            // Document doc = extCommandData.Application.ActiveUIDocument.Document;
             using (Transaction t = new Transaction(doc, "Making Worksets"))
             {
                 try

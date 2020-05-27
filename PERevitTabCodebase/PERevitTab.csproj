@@ -71,7 +71,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="MainDBApplication.cs" />
     <Compile Include="MainApplication.cs" />
     <Compile Include="Commands\DT\CreateWorksets.cs" />
     <Compile Include="Commands\DT\ModelMetrics.cs" />

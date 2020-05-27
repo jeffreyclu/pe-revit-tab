@@ -26,7 +26,7 @@ namespace PERevitTab.Commands.DT
                 IList<Workset> allWorksets = new FilteredWorksetCollector(doc).OfKind(WorksetKind.UserWorkset).ToList();
                 if (allWorksets.Count > 1)
                 {
-                    Forms.WorksetCreator wf = new Forms.WorksetCreator(commandData);
+                    Forms.WorksetCreatorAuto wf = new Forms.WorksetCreatorAuto(doc);
                     wf.ShowDialog();
                     wf.Close();
                     return Result.Succeeded;

@@ -25,7 +25,6 @@ namespace PERevitTab
         public static UIControlledApplication uiCtrlApp;
         public bool worksharingEventSubscribed = false;
         #endregion
-        #region main functions
         public Result OnShutdown(UIControlledApplication application)
         {
             return Result.Succeeded;
@@ -113,7 +112,6 @@ namespace PERevitTab
             }
             return Result.Succeeded;
         }
-        #endregion
         #region event handlers
         private void OnIdling(object sender, IdlingEventArgs args)
         {
@@ -138,7 +136,9 @@ namespace PERevitTab
 
         private void CreateWorksets(Document doc)
         {
-            TaskDialog.Show("Success", "Worksets Enabled");
+            Forms.WorksetCreator wf = new Forms.WorksetCreator(doc);
+            wf.ShowDialog();
+            wf.Close();
         }
         #endregion
     }
