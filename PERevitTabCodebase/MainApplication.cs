@@ -59,6 +59,9 @@ namespace PERevitTab
                 // button 2 image
                 BitmapImage createWorksetsImg = new BitmapImage(new Uri("pack://application:,,,/PERevitTab;component/Assets/Images/worksetCreatorBtn.png")); // add the uri
 
+                // button 2 image
+                BitmapImage sharepointConnectorImg = new BitmapImage(new Uri("pack://application:,,,/PERevitTab;component/Assets/Images/worksetCreatorBtn.png")); // add the uri
+
                 // button 1
                 PushButtonData modelMetricsData = new PushButtonData("Model Metrics", "Run \n" + "Model Metrics", assemblyPath, "PERevitTab.Commands.DT.ModelMetrics");
                 PushButton modelMetrics = dtPanel.AddItem(modelMetricsData) as PushButton;
@@ -70,6 +73,12 @@ namespace PERevitTab
                 PushButton createWorksets = dtPanel.AddItem(createWorksetsData) as PushButton;
                 createWorksets.LargeImage = createWorksetsImg;
                 createWorksets.ToolTip = "Creates worksets";
+
+                // button 3
+                PushButtonData sharepointConnectorData = new PushButtonData("Connect to Sharepoint", "Connect \n" + "to Sharepoint", assemblyPath, "PERevitTab.Commands.DT.SharepointConnector");
+                PushButton sharepointConnector = dtPanel.AddItem(sharepointConnectorData) as PushButton;
+                sharepointConnector.LargeImage = sharepointConnectorImg;
+                sharepointConnector.ToolTip = "Creates worksets";
                 #endregion
 
                 #region DU panel
