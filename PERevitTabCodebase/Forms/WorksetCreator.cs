@@ -28,6 +28,7 @@ namespace PERevitTab.Forms
         private object[] worksetNames = new object[] { "New Workset 1", "New Workset 2", "New Workset 3" };
         private List<string> selectedWorksetNames = new List<string>();
         private Document doc;
+        private string filePath;
         #endregion
         #region main functions
         public WorksetCreator(Document extDoc)
@@ -38,25 +39,36 @@ namespace PERevitTab.Forms
 
         private void WorksetCreator_Load(object sender, EventArgs e)
         {
-            try
+            MessageBox.Show("Select a workset list", "Workset Creator");
+            openFileDialog1.Multiselect = true;
+            openFileDialog1.ReadOnlyChecked = true;
+            if (openFileDialog1.ShowDialog() == DialogResult.OK)
             {
-                worksetNames = GenerateWorksetNames();
-                foreach (object w in worksetNames)
+                try
                 {
-                    this.checkedListBox1.Items.Add(w, CheckState.Checked);
+                    filePath = openFileDialog1.FileName;
+                    worksetNames = GenerateWorksetNames(filePath);
+                    foreach (object w in worksetNames)
+                    {
+                        this.checkedListBox1.Items.Add(w, CheckState.Checked);
+                    }
+                }
+                catch (Exception err)
+                {
+                    TaskDialog.Show("Error", err.ToString());
                 }
             }
-            catch (Exception err)
+            else
             {
-                TaskDialog.Show("Error", err.ToString());
+                this.Close();
             }
         }
 
-        private object[] GenerateWorksetNames()
+        private object[] GenerateWorksetNames(string path)
         {
             // Create COM Objects. Create a COM object for everything that is referenced
             Excel.Application xlApp = new Excel.Application();
-            Excel.Workbook xlWorkbook = xlApp.Workbooks.Open(@"\\d-peapcny\Enterprise\G_Gen-Admin\Committees\Data Unit\01_TEAMS\AUTOMATION\PE Revit Tab\PERevitTabCodebase\PERevitTabCodebase\Assets\Excel\worksets.xlsx");
+            Excel.Workbook xlWorkbook = xlApp.Workbooks.Open(path);
             Excel._Worksheet xlWorksheet = xlWorkbook.Sheets[1];
             Excel.Range xlRange = xlWorksheet.UsedRange;
 

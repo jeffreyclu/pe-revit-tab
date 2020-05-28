@@ -50,6 +50,12 @@
       <HintPath>C:\Program Files (x86)\IronPython 2.7\Microsoft.Scripting.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="Microsoft.SharePoint.Client, Version=14.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.SharePoint.Client.14.0.4762.1000\lib\Microsoft.SharePoint.Client.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.SharePoint.Client.Runtime, Version=14.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.SharePoint.Client.14.0.4762.1000\lib\Microsoft.SharePoint.Client.Runtime.dll</HintPath>
+    </Reference>
     <Reference Include="PresentationCore" />
     <Reference Include="RevitAPI">
       <HintPath>C:\Program Files\Autodesk\Revit 2019\RevitAPI.dll</HintPath>
@@ -71,6 +77,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Commands\DT\SharepointConnector.cs" />
     <Compile Include="Commands\DU\RunDynamo4.cs" />
     <Compile Include="MainApplication.cs" />
     <Compile Include="Commands\DT\CreateWorksets.cs" />
@@ -104,6 +111,7 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Assets\Excel\worksets.xlsx" />
+    <None Include="packages.config" />
     <None Include="PERevitTab.addin">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

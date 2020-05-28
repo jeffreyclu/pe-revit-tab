@@ -105,14 +105,14 @@ namespace PERevitTab
                 runDynamo3.ToolTip = "Choose a Sheet, then select view references (elevation and section tags, callouts) to be added to the sheet.";
 
                 //button 4
-                PushButtonData runDynamo4Data = new PushButtonData("Add Views to Sheets", "Add Views to \n" + "Sheets - Selection", assemblyPath, "PERevitTab.Commands.DU.RunDynamo4");
+                PushButtonData runDynamo4Data = new PushButtonData("Add Views to Sheets2", "Add Views to \n" + "Sheets - Selection", assemblyPath, "PERevitTab.Commands.DU.RunDynamo4");
                 PushButton runDynamo4 = duPanel.AddItem(runDynamo4Data) as PushButton;
                 runDynamo4.LargeImage = runDynamo4Img;
                 runDynamo4.ToolTip = "Choose a Sheet, then select view references (elevation and section tags, callouts) to be added to the sheet.";
                 #endregion
 
                 #region idling event
-                uiCtrlApp.Idling += OnIdling;
+                // uiCtrlApp.Idling += OnIdling;
                 #endregion
             }
             catch (Exception err)
