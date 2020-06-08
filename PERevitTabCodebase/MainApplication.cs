@@ -59,8 +59,8 @@ namespace PERevitTab
                 // button 2 image
                 BitmapImage createWorksetsImg = new BitmapImage(new Uri("pack://application:,,,/PERevitTab;component/Assets/Images/worksetCreatorBtn.png")); // add the uri
 
-                // button 2 image
-                BitmapImage sharepointConnectorImg = new BitmapImage(new Uri("pack://application:,,,/PERevitTab;component/Assets/Images/worksetCreatorBtn.png")); // add the uri
+                // button 3 image
+                BitmapImage UDPInterfaceImg = new BitmapImage(new Uri("pack://application:,,,/PERevitTab;component/Assets/Images/worksetCreatorBtn.png")); // add the uri
 
                 // button 1
                 PushButtonData modelMetricsData = new PushButtonData("Model Metrics", "Run \n" + "Model Metrics", assemblyPath, "PERevitTab.Commands.DT.ModelMetrics");
@@ -75,10 +75,11 @@ namespace PERevitTab
                 createWorksets.ToolTip = "Creates worksets";
 
                 // button 3
-                PushButtonData sharepointConnectorData = new PushButtonData("Connect to Sharepoint", "Connect \n" + "to Sharepoint", assemblyPath, "PERevitTab.Commands.DT.SharepointConnector");
-                PushButton sharepointConnector = dtPanel.AddItem(sharepointConnectorData) as PushButton;
-                sharepointConnector.LargeImage = sharepointConnectorImg;
-                sharepointConnector.ToolTip = "Creates worksets";
+                PushButtonData UDPInterfaceData = new PushButtonData("Connect to Sharepoint", "Connect \n" + "to Sharepoint", assemblyPath, "PERevitTab.Commands.DT.UDPLauncher");
+                PushButton UDPInterface = dtPanel.AddItem(UDPInterfaceData) as PushButton;
+                UDPInterface.LargeImage = UDPInterfaceImg;
+                UDPInterface.ToolTip = "Connect to Sharepoint";
+
                 #endregion
 
                 #region DU panel

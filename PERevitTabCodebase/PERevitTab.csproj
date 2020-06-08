@@ -80,14 +80,22 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Commands\DT\SharepointConnector.cs" />
+    <Compile Include="Commands\DT\UDPLauncher.cs" />
+    <Compile Include="Commands\DT\UDP\RevitMethods.cs" />
+    <Compile Include="Commands\DT\UDP\SharepointMethods.cs" />
     <Compile Include="Commands\DU\RunDynamo4.cs" />
-    <Compile Include="Data\Credentials.cs" />
+    <Compile Include="Data\SharepointConstants.cs" />
     <Compile Include="Forms\SharepointLogin.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="Forms\SharepointLogin.Designer.cs">
       <DependentUpon>SharepointLogin.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\UDPInterface.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\UDPInterface.Designer.cs">
+      <DependentUpon>UDPInterface.cs</DependentUpon>
     </Compile>
     <Compile Include="MainApplication.cs" />
     <Compile Include="Commands\DT\CreateWorksets.cs" />
@@ -117,6 +125,9 @@
   <ItemGroup>
     <EmbeddedResource Include="Forms\SharepointLogin.resx">
       <DependentUpon>SharepointLogin.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\UDPInterface.resx">
+      <DependentUpon>UDPInterface.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\WorksetCreator.resx">
       <DependentUpon>WorksetCreator.cs</DependentUpon>
