@@ -4,7 +4,7 @@ using System.Linq;
 using System.Security;
 using System.Text;
 using System.Threading.Tasks;
-
+using System.Windows.Forms;
 using SP = Microsoft.SharePoint.Client;
 
 namespace PERevitTab.Commands.DT.UDP
@@ -55,19 +55,28 @@ namespace PERevitTab.Commands.DT.UDP
         }
         #endregion
         #region "set" methods
-        public static void AddItemsToList(SP.ClientContext context, SP.List list, List<object> rooms)
+        public static bool AddItemsToList(SP.ClientContext context, SP.List list, List<object> rooms)
         {
-            foreach (Dictionary<string, string> room in rooms)
+            try
             {
-                SP.ListItemCreationInformation itemCreateInfo = new SP.ListItemCreationInformation();
-                SP.ListItem newItem = list.AddItem(itemCreateInfo);
-                foreach (KeyValuePair<string, string> entry in room)
+                foreach (Dictionary<string, string> room in rooms)
                 {
-                    newItem[entry.Key.ToString()] = entry.Value;
+                    SP.ListItemCreationInformation itemCreateInfo = new SP.ListItemCreationInformation();
+                    SP.ListItem newItem = list.AddItem(itemCreateInfo);
+                    foreach (KeyValuePair<string, string> entry in room)
+                    {
+                        newItem[entry.Key.ToString()] = entry.Value;
+                    }
+                    newItem.Update();
                 }
-                newItem.Update();
+                context.ExecuteQuery();
+                return true;
             }
-            context.ExecuteQuery();
+            catch (Exception e)
+            {
+                MessageBox.Show(e.ToString());
+                return false;
+            }
         }
         #endregion
 

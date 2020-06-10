@@ -24,14 +24,17 @@ namespace PERevitTab.Forms
     [Regeneration(RegenerationOption.Manual)]
     public partial class UDPInterface : System.Windows.Forms.Form
     {
+        #region class variables
         public static bool _isLoggedIn = false;
         private string _username { get; set; }
         private SecureString _password { get; set; }
         private Document _doc { get; set; }
         private Autodesk.Revit.ApplicationServices.Application _app { get; set; }
+        private string _lastSynced { get; set; }
         SP.ClientContext _context { get; set; }
         private static Dictionary<string, ExternalDefinition> _sharedParametersList = new Dictionary<string, ExternalDefinition>();
         private static Dictionary<string, SP.ListItemCollection> _SPListItems = new Dictionary<string, SP.ListItemCollection>();
+        #endregion
         public UDPInterface(Document extDoc, Autodesk.Revit.ApplicationServices.Application extApp, SP.ClientContext extContext)
         {
             // initialize class variables from injected arguments
@@ -170,22 +173,40 @@ namespace PERevitTab.Forms
 
         private void uploadButton_Click(object sender, EventArgs e)
         {
-
+            // check login
+            CheckLogin();
+            // get list from context
+            SP.List writeList = SharepointMethods.GetListFromWeb(
+                _context,
+                SharepointConstants.Links.writeListName);
+            // collect room data
+            IList<Element> rooms = RevitMethods.CollectRooms(_doc);
+            List<object> roomsData = RevitMethods.ParseRoomData(rooms);
+            // write to sharepoint
+            bool roomsUploaded = SharepointMethods.AddItemsToList(_context, writeList, roomsData);
+            if (roomsUploaded)
+            {
+                MessageBox.Show($"Success, {roomsData.Count} rooms uploaded.");
+            }
+            else
+            {
+                MessageBox.Show("Error, there was a publishing issue. Please try again later.");
+            }
         }
 
         private void viewProjectButton_Click(object sender, EventArgs e)
         {
-
+            // TODO add link or form to display project info
         }
 
         private void downloadPowerBIButton_Click(object sender, EventArgs e)
         {
-
+            // TODO add link to power bi template
         }
 
         private void provideFeedback_Click(object sender, EventArgs e)
         {
-
+            // TODO add link or form to provide feedback
         }
         #endregion
 

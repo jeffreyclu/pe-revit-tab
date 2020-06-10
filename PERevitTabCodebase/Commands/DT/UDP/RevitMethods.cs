@@ -24,6 +24,21 @@ namespace PERevitTab.Commands.DT.UDP
 
             return rooms;
         }
+        public static List<object> ParseRoomData(IList<Element> rooms)
+        {
+            List<object> roomsList = new List<object>();
+            foreach (SpatialElement r in rooms)
+            {
+                Dictionary<string, string> roomsInfo = new Dictionary<string, string>();
+                roomsInfo["RoomName"] = r.Name;
+                roomsInfo["RoomNumber"] = r.Number;
+                roomsInfo["RoomArea"] = r.Area.ToString();
+                Room ro = (Room)r;
+                roomsInfo["RoomVolume"] = ro.Volume.ToString();
+                roomsList.Add(roomsInfo);
+            }
+            return roomsList;
+        }
         public static ExternalDefinition AddSharedParameter(Document doc, Application app, string name, ParameterType type, bool instance)
         {
             using (Transaction t = new Transaction(doc))
