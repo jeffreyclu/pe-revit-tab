@@ -1,0 +1,48 @@
+﻿//Sync
+
+//get all all items in cp_published_volumes where project_id currentProject.ID
+using System.ComponentModel;
+using System.Linq;
+
+Collect(c_published_volumes, Filter(cp_published_volumes, project_id = currentProject.ID));
+
+//get latest design progress transaction for project
+Collect(
+	c_design_progress_transactions, 
+		Filter(cp_transactions, transaction_type = 3
+	)
+);
+
+//get all volumes published in the last dp tranacation
+Collect(c_revit_volumes, Filter(cp_revit_volumes, transaction_id = First(c_design_progress_transactions).ID));
+
+//add ID of the c_revit_volumes item matching the c_published_volumes item
+Collect(c_volumes_for_evaluation, AddColumns(
+	c_published_volumes, 
+	"revit_volume_id", Lookup(c_revit_volumes, vif_id = vif_id).ID,
+	"revit_volume_element_id", Lookup(c_revit_volumes, vif_id = vif_id).element_id));
+
+//get all current revit rooms
+Collect(r_revit_volumes,all_rooms_in_all_phases_in_the_model);
+
+In a Form:
+
+	//Matching		- Display Volumes which have a Matching cp_pub_vol_id + revit_element_id pair
+		Filter(c_volumes_for_evaluation, revit_volume_element_id = r_revit_volumes.element_id)
+		runCompareParameters
+	//Mismatched	- Display Volumes that are mismatched
+		Filter(c_volumes_for_evaluation, revit_volume_element_id <> r_revit_volumes.element_id)
+	//New in Revit	- Display all Volumes that are new in the Revit model and don't exist in the UDP
+		Filter(r_revit_volumes, vif_id = "")
+	//New in UDP	- Display all Volumes that are new in UDP and are yet to be placed in Revit
+		Filter(c_volumes_for_evaluation.revit_volume_element_id = revit_volume_id = "" && revit_volume_element_id = "")
+
+
+//Parameters to import from SP
+
+
+//Working with Phases
+	/*	When on first sync, need to make sure that all phases listed in UDP for the project exist, and in the same order. 
+		When assigning phases in Revit an an element, you only need to assign it by name rather than an ID number, so you
+		will just need to process all phases for the project, and have the phases created in that order and match the names in UDP. */
+		
