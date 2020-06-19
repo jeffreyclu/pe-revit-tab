@@ -1,7 +1,10 @@
-﻿using Autodesk.Revit.Attributes;
+﻿#region autodesk libraries
+using Autodesk.Revit.Attributes;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
+#endregion
 
+#region system libraries
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -12,8 +15,11 @@ using System.Security;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+#endregion
 
+#region microsoft libraries
 using SP = Microsoft.SharePoint.Client;
+#endregion
 
 using PERevitTab.Commands.DT.UDP;
 using PERevitTab.Data;
@@ -26,8 +32,16 @@ namespace PERevitTab.Forms
     {
         #region class variables
         public static bool _isLoggedIn = false;
+        public static bool _isProjectChosen = false;
         private string _username { get; set; }
         private SecureString _password { get; set; }
+        private string _user { get; set; }
+        private string _userId { get; set; }
+        private string _activeProject { get; set; }
+        private string _activeProjectId { get; set; }
+        private List<string> _allProjectIds { get; set; }
+        private List<string> _userProjectIds { get; set; }
+        private Dictionary<string, string> _userProjects = new Dictionary<string, string>();
         private Document _doc { get; set; }
         private Autodesk.Revit.ApplicationServices.Application _app { get; set; }
         private string _lastSynced { get; set; }
@@ -45,6 +59,9 @@ namespace PERevitTab.Forms
         }
 
         #region main form methods
+        /// <summary>
+        /// 
+        /// </summary>
         private void CheckLogin()
         {
             _username = SharepointConstants.Cache.username;
@@ -78,6 +95,59 @@ namespace PERevitTab.Forms
                 this.lastSyncedLabel.Visible = false;
                 this.uploadButton.Enabled = false;
                 this.viewProjectButton.Enabled = false;
+            }
+        }
+
+        private void GetItemsFromSharepointList(string listName, string viewName, string dictionaryKey)
+        {
+            try
+            {
+                // get lists from context
+                SP.List readList = SharepointMethods.GetListFromWeb(
+                    _context,
+                    listName);
+                // get view from list by view name
+                SP.View readView = SharepointMethods.GetViewFromList(
+                    _context,
+                    readList,
+                    viewName);
+                // get items from list by view
+                SP.ListItemCollection readListItems = SharepointMethods.GetViewItemsFromList(
+                    _context,
+                    readList,
+                    readView);
+                // save the items in a dictionary
+                Dictionary<string, SP.ListItemCollection> SPListItems = new Dictionary<string, SP.ListItemCollection>();
+                _SPListItems[dictionaryKey] = readListItems;
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show(e.ToString());
+            }
+        }
+        
+        private void CreateSharedParametersFromList(Dictionary<string, ParameterType> parameterList)
+        {
+            try
+            {
+                // iterate through the parameter list dictionary
+                foreach(KeyValuePair<string, ParameterType> paramDef in parameterList) {
+                    // call add shared parameter method
+                    ExternalDefinition extDef = RevitMethods.AddSharedParameter(
+                        _doc, 
+                        _app, 
+                        $"{paramDef.Key}",
+                        paramDef.Value,
+                        BuiltInCategory.OST_Rooms,
+                        BuiltInParameterGroup.PG_REFERENCE,
+                        true);
+                    // save returned extDef to list
+                    _sharedParametersList[$"{paramDef.Key}"] = extDef;
+                }
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show(e.ToString());
             }
         }
         #endregion
@@ -116,51 +186,29 @@ namespace PERevitTab.Forms
         {
             // check login
             CheckLogin();
-            // get lists from context
-            SP.List readList = SharepointMethods.GetListFromWeb(
-                _context, 
-                SharepointConstants.Links.readListName);
-            // get view from list by view name
-            SP.View readView = SharepointMethods.GetViewFromList(
-                _context, 
-                readList, 
-                SharepointConstants.Links.readViewName);
-            // get items from list by view
-            SP.ListItemCollection readListItems = SharepointMethods.GetViewItemsFromList(
-                _context,
-                readList,
-                readView);
-            // save the items in a dictionary
-            _SPListItems["readListItems"] = readListItems;
 
-            // new shared parameters
-            ExternalDefinition vif_ID = RevitMethods.AddSharedParameter(_doc, _app, "vif_ID", Autodesk.Revit.DB.ParameterType.Text, true);
-            _sharedParametersList["vif_ID"] = vif_ID; // TODO refactor this part to be in RevitMethods.AddSharedParameter function to avoid repetition
-            ExternalDefinition org1 = RevitMethods.AddSharedParameter(_doc, _app, "org1", Autodesk.Revit.DB.ParameterType.Text, true);
-            _sharedParametersList["org1"] = org1;
-            ExternalDefinition org2 = RevitMethods.AddSharedParameter(_doc, _app, "org2", Autodesk.Revit.DB.ParameterType.Text, true);
-            _sharedParametersList["org2"] = org2;
-            ExternalDefinition org3 = RevitMethods.AddSharedParameter(_doc, _app, "org3", Autodesk.Revit.DB.ParameterType.Text, true);
-            _sharedParametersList["org3"] = org3;
-            ExternalDefinition org4 = RevitMethods.AddSharedParameter(_doc, _app, "org4", Autodesk.Revit.DB.ParameterType.Text, true);
-            _sharedParametersList["org4"] = org4;
-            ExternalDefinition org5 = RevitMethods.AddSharedParameter(_doc, _app, "org6", Autodesk.Revit.DB.ParameterType.Text, true);
-            _sharedParametersList["org5"] = org5;
-            ExternalDefinition org6 = RevitMethods.AddSharedParameter(_doc, _app, "org6", Autodesk.Revit.DB.ParameterType.Text, true);
-            _sharedParametersList["org6"] = org6;
-            ExternalDefinition org7 = RevitMethods.AddSharedParameter(_doc, _app, "org7", Autodesk.Revit.DB.ParameterType.Text, true);
-            _sharedParametersList["org7"] = org7;
-            ExternalDefinition org8 = RevitMethods.AddSharedParameter(_doc, _app, "org8", Autodesk.Revit.DB.ParameterType.Text, true);
-            _sharedParametersList["org8"] = org8;
+            // get items from SP list
+            GetItemsFromSharepointList(
+                SharepointConstants.Links.readListName, 
+                SharepointConstants.Links.readViewName, 
+                "readListItems");
+
+            // create new shared parameters
+            CreateSharedParametersFromList(SharepointConstants.Dictionaries.spToRevitParameterTypes);
 
             // get the latest revit phase for room creation
             Phase latestPhase = RevitMethods.GetLatestPhase(_doc);
 
             // generate the rooms
-            bool roomsCreated = RevitMethods.GenerateRooms(_doc, latestPhase, _SPListItems, _sharedParametersList);
+            bool roomsCreated = RevitMethods.GenerateRooms(
+                _doc, 
+                latestPhase, 
+                _SPListItems, 
+                _sharedParametersList);
+
             if (roomsCreated)
             {
-                MessageBox.Show($"Success, {readListItems.Count} rooms synced.");
+                MessageBox.Show($"Success, {_SPListItems["readListItems"].Count} rooms synced.");
                 (string writeDate, string writeTime) = FormatDateTime();
                 lastSyncedLabel.Text = $"Last synced {writeDate} at {writeTime}";
                 ReloadForm();
@@ -175,15 +223,19 @@ namespace PERevitTab.Forms
         {
             // check login
             CheckLogin();
+
             // get list from context
             SP.List writeList = SharepointMethods.GetListFromWeb(
                 _context,
                 SharepointConstants.Links.writeListName);
+
             // collect room data
             IList<Element> rooms = RevitMethods.CollectRooms(_doc);
             List<object> roomsData = RevitMethods.ParseRoomData(rooms);
+
             // write to sharepoint
             bool roomsUploaded = SharepointMethods.AddItemsToList(_context, writeList, roomsData);
+
             if (roomsUploaded)
             {
                 MessageBox.Show($"Success, {roomsData.Count} rooms uploaded.");
