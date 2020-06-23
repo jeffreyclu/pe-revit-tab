@@ -85,6 +85,12 @@
     <Compile Include="Commands\DT\UDP\SharepointMethods.cs" />
     <Compile Include="Commands\DU\RunDynamo4.cs" />
     <Compile Include="Data\SharepointConstants.cs" />
+    <Compile Include="Forms\Form1.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\Form1.Designer.cs">
+      <DependentUpon>Form1.cs</DependentUpon>
+    </Compile>
     <Compile Include="Forms\SharepointLogin.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -123,6 +129,9 @@
     </COMReference>
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Forms\Form1.resx">
+      <DependentUpon>Form1.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Forms\SharepointLogin.resx">
       <DependentUpon>SharepointLogin.cs</DependentUpon>
     </EmbeddedResource>

@@ -1,6 +1,7 @@
 ﻿#region autodesk libraries
 using Autodesk.Revit.Attributes;
 using Autodesk.Revit.DB;
+using Autodesk.Revit.DB.Architecture;
 using Autodesk.Revit.UI;
 #endregion
 
@@ -35,20 +36,22 @@ namespace PERevitTab.Forms
         public static bool _isProjectChosen = false;
         private string _username { get; set; }
         private SecureString _password { get; set; }
-        private string _user { get; set; }
-        private string _userId { get; set; }
-        private string _activeProject { get; set; }
-        private string _activeProjectId { get; set; }
-        private List<string> _allProjectIds { get; set; }
-        private List<string> _userProjectIds { get; set; }
-        private Dictionary<string, string> _userProjects = new Dictionary<string, string>();
+        private string _lastSynced { get; set; }
         private Document _doc { get; set; }
         private Autodesk.Revit.ApplicationServices.Application _app { get; set; }
-        private string _lastSynced { get; set; }
         SP.ClientContext _context { get; set; }
-        private static Dictionary<string, ExternalDefinition> _sharedParametersList = new Dictionary<string, ExternalDefinition>();
-        private static Dictionary<string, SP.ListItemCollection> _SPListItems = new Dictionary<string, SP.ListItemCollection>();
+        private Phase _latestPhase { get; set; }
+        private List<Room> _createdRooms { get; set; }
+        private Dictionary<string, ExternalDefinition> _roomParameters { get; set; }
+        private IList<Element> _collectedRooms { get; set; }
+        private bool _roomParametersChecked { get; set; }
+        private List<object> _collectedRoomsData { get; set; }
+        private bool _roomsUploaded { get; set; }
+        private SP.ListItemCollection _SPListItems { get; set; }
+        private SP.List _SPWriteList { get; set; }
         #endregion
+
+        #region main form method
         public UDPInterface(Document extDoc, Autodesk.Revit.ApplicationServices.Application extApp, SP.ClientContext extContext)
         {
             // initialize class variables from injected arguments
@@ -57,13 +60,12 @@ namespace PERevitTab.Forms
             _app = extApp;
             InitializeComponent();
         }
+        #endregion
 
-        #region main form methods
-        /// <summary>
-        /// 
-        /// </summary>
+        #region helper methods
         private void CheckLogin()
         {
+            // grab username and password from the cache
             _username = SharepointConstants.Cache.username;
             _password = SharepointConstants.Cache.password;
             _isLoggedIn = (_username != null && _password != null);
@@ -75,34 +77,35 @@ namespace PERevitTab.Forms
 
         private void ReloadForm()
         {
+            // check if we are logged in and set visibility/text accordingly
             if (_isLoggedIn == true)
             {
-                this.loginButton.Visible = false;
-                this.logoutButton.Visible = true;
-                this.userLabel.Visible = true;
-                this.userLabel.Text = _username;
-                this.syncButton.Enabled = true;
-                this.lastSyncedLabel.Visible = true;
-                this.uploadButton.Enabled = true;
-                this.viewProjectButton.Enabled = true;
+                loginButton.Visible = false;
+                logoutButton.Visible = true;
+                userLabel.Visible = true;
+                userLabel.Text = _username;
+                syncButton.Enabled = true;
+                lastSyncedLabel.Visible = true;
+                uploadButton.Enabled = true;
+                viewProjectButton.Enabled = true;
             }
             else
             {
-                this.loginButton.Visible = true;
-                this.userLabel.Visible = false;
-                this.logoutButton.Visible = false;
-                this.syncButton.Enabled = false;
-                this.lastSyncedLabel.Visible = false;
-                this.uploadButton.Enabled = false;
-                this.viewProjectButton.Enabled = false;
+                loginButton.Visible = true;
+                userLabel.Visible = false;
+                logoutButton.Visible = false;
+                syncButton.Enabled = false;
+                lastSyncedLabel.Visible = false;
+                uploadButton.Enabled = false;
+                viewProjectButton.Enabled = false;
             }
         }
 
-        private void GetItemsFromSharepointList(string listName, string viewName, string dictionaryKey)
+        private SP.ListItemCollection GetItemsFromSharepointList(string listName, string viewName)
         {
             try
             {
-                // get lists from context
+                // get the list from context
                 SP.List readList = SharepointMethods.GetListFromWeb(
                     _context,
                     listName);
@@ -116,43 +119,154 @@ namespace PERevitTab.Forms
                     _context,
                     readList,
                     readView);
-                // save the items in a dictionary
-                Dictionary<string, SP.ListItemCollection> SPListItems = new Dictionary<string, SP.ListItemCollection>();
-                _SPListItems[dictionaryKey] = readListItems;
+                return readListItems;
             }
             catch (Exception e)
             {
                 MessageBox.Show(e.ToString());
+                return null;
             }
         }
         
-        private void CreateSharedParametersFromList(Dictionary<string, ParameterType> parameterList)
+        private bool SyncToSharepoint()
         {
+            // get items from SP list
             try
             {
-                // iterate through the parameter list dictionary
-                foreach(KeyValuePair<string, ParameterType> paramDef in parameterList) {
-                    // call add shared parameter method
-                    ExternalDefinition extDef = RevitMethods.AddSharedParameter(
-                        _doc, 
-                        _app, 
-                        $"{paramDef.Key}",
-                        paramDef.Value,
-                        BuiltInCategory.OST_Rooms,
-                        BuiltInParameterGroup.PG_REFERENCE,
-                        true);
-                    // save returned extDef to list
-                    _sharedParametersList[$"{paramDef.Key}"] = extDef;
+                _SPListItems = GetItemsFromSharepointList(
+                    SharepointConstants.Links.spReadList,
+                    SharepointConstants.Links.allItems);
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show(e.ToString());
+                return false;
+            }
+
+            // create new room shared parameters
+            try
+            {
+                _roomParameters = RevitMethods.AddSharedParametersFromList(
+                    _doc,
+                    _app,
+                    SharepointConstants.Dictionaries.newRevitRoomParameters,
+                    BuiltInCategory.OST_Rooms,
+                    BuiltInParameterGroup.PG_REFERENCE);
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show(e.ToString());
+                return false;
+            }
+
+            // get the latest revit phase for room creation
+            try
+            {
+                _latestPhase = RevitMethods.GetLatestPhase(_doc);
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show(e.ToString());
+                return false;
+            }
+
+            // generate the rooms
+            try
+            {
+                _createdRooms = RevitMethods.GenerateRooms(
+                    _doc,
+                    _latestPhase,
+                    _SPListItems,
+                    _roomParameters);
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show(e.ToString());
+                return false;
+            }
+
+            // if we get to the end then return true
+            return true;
+        }
+
+        private bool UploadToSharepoint()
+        {
+            // collect rooms from the model, return false if there are none
+            try
+            {
+                _collectedRooms = RevitMethods.CollectRooms(_doc);
+                if (_collectedRooms == null)
+                {
+                    MessageBox.Show("Error: no rooms in model.");
+                    return false;
                 }
             }
             catch (Exception e)
             {
                 MessageBox.Show(e.ToString());
+                return false;
             }
+
+            // check if the custom room parameters exist
+            try
+            {
+                _roomParametersChecked = RevitMethods.CheckRoomParameters(
+                    _collectedRooms,
+                    SharepointConstants.Dictionaries.newRevitRoomParameters);
+                if (_roomParametersChecked == false) {
+                    MessageBox.Show("Error, project has not been synced. Sync project and try again.");
+                    return false;
+                }
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show(e.ToString());
+                return false;
+            }
+
+            // collect the room info for writing to sharepoint
+            try
+            {
+                _collectedRoomsData = RevitMethods.ParseRoomData(_collectedRooms);
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show(e.ToString());
+                return false;
+            }
+
+            // get the write list from sharepoint
+            try
+            {
+               _SPWriteList = SharepointMethods.GetListFromWeb(
+                _context,
+                SharepointConstants.Links.spWriteList);
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show(e.ToString());
+                return false;
+            }
+
+            // write the room data to the write list
+            try { 
+                _roomsUploaded = SharepointMethods.AddItemsToList(
+                    _context, 
+                    _SPWriteList, 
+                    _collectedRoomsData);
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show(e.ToString());
+                return false;
+            }
+            
+            // if we get to the end then return true
+            return true;
         }
         #endregion
 
-        #region form event handlers
+        #region event handlers
         private void UDPInterface_Load(object sender, EventArgs e)
         {
             CheckLogin();
@@ -169,13 +283,19 @@ namespace PERevitTab.Forms
         #region click handlers
         private void loginButton_Click(object sender, EventArgs e)
         {
+            // initialize a new login form
             Forms.SharepointLogin spLogin = new Forms.SharepointLogin(_context);
+
+            // add an event handler to handle the login form closing
             spLogin.FormClosed += SPLoginClosed;
+
+            // show the form
             spLogin.ShowDialog();
         }
 
         private void logoutButton_Click(object sender, EventArgs e)
         {
+            // reset cached username and password variables
             SharepointConstants.Cache.username = null;
             SharepointConstants.Cache.password = null;
             CheckLogin();
@@ -187,28 +307,13 @@ namespace PERevitTab.Forms
             // check login
             CheckLogin();
 
-            // get items from SP list
-            GetItemsFromSharepointList(
-                SharepointConstants.Links.readListName, 
-                SharepointConstants.Links.readViewName, 
-                "readListItems");
+            // run sync method
+            bool synced = SyncToSharepoint();
 
-            // create new shared parameters
-            CreateSharedParametersFromList(SharepointConstants.Dictionaries.spToRevitParameterTypes);
-
-            // get the latest revit phase for room creation
-            Phase latestPhase = RevitMethods.GetLatestPhase(_doc);
-
-            // generate the rooms
-            bool roomsCreated = RevitMethods.GenerateRooms(
-                _doc, 
-                latestPhase, 
-                _SPListItems, 
-                _sharedParametersList);
-
-            if (roomsCreated)
+            // check if sync method was successful
+            if (synced)
             {
-                MessageBox.Show($"Success, {_SPListItems["readListItems"].Count} rooms synced.");
+                MessageBox.Show($"Success, {_createdRooms.Count} rooms synced.");
                 (string writeDate, string writeTime) = FormatDateTime();
                 lastSyncedLabel.Text = $"Last synced {writeDate} at {writeTime}";
                 ReloadForm();
@@ -225,20 +330,11 @@ namespace PERevitTab.Forms
             CheckLogin();
 
             // get list from context
-            SP.List writeList = SharepointMethods.GetListFromWeb(
-                _context,
-                SharepointConstants.Links.writeListName);
-
-            // collect room data
-            IList<Element> rooms = RevitMethods.CollectRooms(_doc);
-            List<object> roomsData = RevitMethods.ParseRoomData(rooms);
-
-            // write to sharepoint
-            bool roomsUploaded = SharepointMethods.AddItemsToList(_context, writeList, roomsData);
+            bool roomsUploaded = UploadToSharepoint();
 
             if (roomsUploaded)
             {
-                MessageBox.Show($"Success, {roomsData.Count} rooms uploaded.");
+                MessageBox.Show($"Success, {_collectedRoomsData.Count} rooms uploaded.");
             }
             else
             {

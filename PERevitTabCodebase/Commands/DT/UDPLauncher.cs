@@ -27,9 +27,10 @@ namespace PERevitTab.Commands.DT
             {
                 // intialize context variables to pass on to user interface form
                 Document doc = commandData.Application.ActiveUIDocument.Document;
-                SP.ClientContext context = SharepointMethods.GetContext(SharepointConstants.Links.siteUrl);
                 Autodesk.Revit.ApplicationServices.Application app = commandData.Application.Application;
-                // inject the context via arguments
+                SP.ClientContext context = SharepointMethods.GetContext(SharepointConstants.Links.siteUrl);
+
+                // inject the context variables via arguments
                 Forms.UDPInterface wf = new Forms.UDPInterface(doc, app, context);
                 wf.ShowDialog();
                 return Result.Succeeded;

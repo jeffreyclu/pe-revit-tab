@@ -1,5 +1,8 @@
-﻿using Autodesk.Revit.DB;
+﻿#region autodesk libraries
+using Autodesk.Revit.DB;
+#endregion
 
+#region system libraries
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -7,11 +10,12 @@ using System.Linq;
 using System.Security;
 using System.Text;
 using System.Threading.Tasks;
+#endregion
 
 namespace PERevitTab.Data
 {
     public class SharepointConstants
-    { 
+    {
         public static class Cache
         {
             public static string username { get; set; }
@@ -20,20 +24,16 @@ namespace PERevitTab.Data
         public static class Links
         {
             public static string siteUrl = @"https://perkinseastman.sharepoint.com/sites/Grove";
-            public static string readListName = @"cp_published_volumes";
-            public static string readViewName = "All Items";
-            public static string writeListName = @"cp_revit_volumes";
-            public static string writeViewName = "All Items";
+            public static string spReadList = @"cp_published_volumes";
+            public static string spWriteList = @"cp_revit_volumes";
             public static string userListName = @"translatedUser";
-            public static string userViewName = "All Items";
             public static string projectListName = @"projects";
-            public static string projectViewName = "All Items";
             public static string projectPermissionsListName = @"cp_project_permissions";
-            public static string projectPermissionsViewName = "All Items";
+            public static string allItems = "All Items";
         }
         public static class Dictionaries
         {
-            public static Dictionary<string, ParameterType> spToRevitParameterTypes = new Dictionary<string, ParameterType>
+            public static Dictionary<string, ParameterType> newRevitRoomParameters = new Dictionary<string, ParameterType>
             {
                 { "org1_Title", ParameterType.Text },
                 { "org1_abbreviation", ParameterType.Text },
@@ -69,13 +69,14 @@ namespace PERevitTab.Data
                 { "leed_standard_Title", ParameterType.Text },
                 { "ibc_standard_Title", ParameterType.Text },
                 { "gross_factor", ParameterType.Number },
+                { "area_net", ParameterType.Number },
                 { "count_occupant_capacity", ParameterType.Integer },
                 { "count_occupant_non_capacity", ParameterType.Integer },
                 { "count_volume_capacity", ParameterType.Integer },
                 { "count_volume_non_capacity", ParameterType.Integer },
                 { "phase_created_Title", ParameterType.Text },
                 { "phase_demolished_Title", ParameterType.Text },
-                { "abbreviation", ParameterType.Text },
+                { "vol_abbreviation", ParameterType.Text },
                 { "vol_sort_id", ParameterType.Integer },
                 { "vol_sorted", ParameterType.Text },
                 { "vol_volume_sort", ParameterType.Text },

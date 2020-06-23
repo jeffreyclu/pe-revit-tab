@@ -1,11 +1,16 @@
-﻿using System;
+﻿#region system libraries
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+#endregion
+
+#region microsoft variables
 using SP = Microsoft.SharePoint.Client;
+#endregion
 
 namespace PERevitTab.Commands.DT.UDP
 {
@@ -49,11 +54,12 @@ namespace PERevitTab.Commands.DT.UDP
             context.ExecuteQuery();
             foreach (SP.Field field in list.Fields)
             {
-                // Do something with the fields
+                // TODO do something with the fields
                 Console.Write(field.InternalName);
             }
         }
         #endregion
+
         #region "set" methods
         public static bool AddItemsToList(SP.ClientContext context, SP.List list, List<object> rooms)
         {
@@ -61,11 +67,11 @@ namespace PERevitTab.Commands.DT.UDP
             {
                 foreach (Dictionary<string, string> room in rooms)
                 {
-                    SP.ListItemCreationInformation itemCreateInfo = new SP.ListItemCreationInformation();
-                    SP.ListItem newItem = list.AddItem(itemCreateInfo);
+                    SP.ListItemCreationInformation itemCreationInfo = new SP.ListItemCreationInformation();
+                    SP.ListItem newItem = list.AddItem(itemCreationInfo);
                     foreach (KeyValuePair<string, string> entry in room)
                     {
-                        newItem[entry.Key.ToString()] = entry.Value;
+                        newItem[entry.Key] = entry.Value;
                     }
                     newItem.Update();
                 }
@@ -80,7 +86,7 @@ namespace PERevitTab.Commands.DT.UDP
         }
         #endregion
 
-        #region validate credentials
+        #region credentials validation
         public static bool ValidateCredentials(SP.ClientContext context, string username, SecureString password)
         {
             try
