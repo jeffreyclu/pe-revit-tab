@@ -1,0 +1,14 @@
+﻿<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<RevitAddIns>
+  <AddIn Type="Application">
+    <Name>PE Revit Utilities</Name>
+    <Assembly>PERevitTab.dll</Assembly>
+    <AddInId>A74C0B59-8D4D-4B92-8522-19B32A71454B</AddInId>
+    <FullClassName>PERevitTab.MainApplication</FullClassName>
+    <Text>PE Revit Utilities</Text>
+    <Description>Productivity Tools for Revit</Description>
+    <VendorId>PE DT DU</VendorId>
+    <VendorDescription>PE DT DU</VendorDescription>
+    <VisibilityMode>AlwaysVisible</VisibilityMode>
+  </AddIn>
+</RevitAddIns>

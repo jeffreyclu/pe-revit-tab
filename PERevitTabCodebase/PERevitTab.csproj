@@ -146,9 +146,13 @@
     <Resource Include="Assets\Images\modelMetricsBtn.png" />
     <Resource Include="Assets\Images\worksetCreatorBtn.png" />
   </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Build\" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>copy "$(TargetDir)"."" "$(AppData)\Autodesk\Revit\Addins\2019\"
-copy "$(TargetDir)"."" "$(AppData)\Autodesk\Revit\Addins\2018\"</PostBuildEvent>
+copy "$(TargetDir)"."" "$(AppData)\Autodesk\Revit\Addins\2018\"
+copy "$(TargetDir)"."" "$(ProjectDir)Build\"</PostBuildEvent>
   </PropertyGroup>
 </Project>

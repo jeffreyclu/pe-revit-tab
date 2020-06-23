@@ -197,7 +197,7 @@ namespace PERevitTab.Commands.DT.UDP
             ProjectInfo pInfo = doc.ProjectInformation;
             TaskDialog.Show("Test", pInfo.Name);
         }
-        public static List<Room> GenerateRooms(Document doc, Phase phase, SP.ListItemCollection SPListItems, Dictionary<string, ExternalDefinition> parameterList)
+        public static List<Room> GenerateRooms(Document doc, Phase phase, SP.ListItemCollection spListItems, Dictionary<string, ExternalDefinition> parameterList)
         {
             using (Transaction t = new Transaction(doc))
             {
@@ -208,7 +208,7 @@ namespace PERevitTab.Commands.DT.UDP
                     List<Room> createdRooms = new List<Room>();
 
                     // iterate over items from the sp list items
-                    foreach (SP.ListItem listItem in SPListItems)
+                    foreach (SP.ListItem listItem in spListItems)
                     {
                         // make a new room for each item
                         Room newRoom = doc.Create.NewRoom(phase);
@@ -274,6 +274,11 @@ namespace PERevitTab.Commands.DT.UDP
         {
             PhaseArray allPhases = doc.Phases;
             return allPhases.get_Item(allPhases.Size - 1);
+        }
+        public static bool CheckSharepointPhases(Document doc, SP.ListItemCollection spPhases)
+        {
+            // TODO finish this
+            return true;
         }
     }
 }
