@@ -43,7 +43,7 @@ namespace PERevitTab.Forms
         private Phase _latestPhase { get; set; }
         private List<Room> _createdRooms { get; set; }
         private Dictionary<string, ExternalDefinition> _roomParameters { get; set; }
-        private IList<Element> _collectedRooms { get; set; }
+        private IList<SpatialElement> _collectedRooms { get; set; }
         private bool _roomParametersChecked { get; set; }
         private List<object> _collectedRoomsData { get; set; }
         private bool _roomsUploaded { get; set; }

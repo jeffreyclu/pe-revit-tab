@@ -250,8 +250,14 @@
             this.Controls.Add(this.syncPanel);
             this.Controls.Add(this.tbdPanel);
             this.Controls.Add(this.loginPanel);
+            this.MaximizeBox = false;
+            this.MaximumSize = new System.Drawing.Size(920, 280);
+            this.MinimizeBox = false;
+            this.MinimumSize = new System.Drawing.Size(920, 280);
             this.Name = "UDPInterface";
+            this.ShowIcon = false;
             this.Text = "UDPInterface";
+            this.TopMost = true;
             this.Load += new System.EventHandler(this.UDPInterface_Load);
             this.loginPanel.ResumeLayout(false);
             this.loginPanel.PerformLayout();

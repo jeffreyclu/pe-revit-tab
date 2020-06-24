@@ -32,12 +32,12 @@ namespace PERevitTab.Commands.DT
 
                 // inject the context variables via arguments
                 Forms.UDPInterface wf = new Forms.UDPInterface(doc, app, context);
-                wf.ShowDialog();
+                wf.Show();
                 return Result.Succeeded;
             }
             catch (Exception e)
             {
-                TaskDialog.Show("Error", e.ToString());
+                MessageBox.Show(e.ToString());
                 return Result.Failed;
             }
         }
