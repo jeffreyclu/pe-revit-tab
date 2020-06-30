@@ -26,7 +26,8 @@ namespace PERevitTab.Data
             public static string siteUrl = @"https://perkinseastman.sharepoint.com/sites/Grove";
             public static string spReadList = @"cp_published_volumes";
             public static string spWriteList = @"cp_revit_volumes";
-            public static string spModelsList = @"cp_revit_models";
+            public static string userListName = @"translatedUser";
+            public static string projectListName = @"projects";
             public static string projectPermissionsListName = @"cp_project_permissions";
             public static string allItems = "All Items";
         }
