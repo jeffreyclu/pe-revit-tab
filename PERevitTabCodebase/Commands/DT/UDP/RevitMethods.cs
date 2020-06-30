@@ -19,6 +19,9 @@ using SP = Microsoft.SharePoint.Client;
 #endregion
 
 using PERevitTab.Data;
+using System.Windows.Forms;
+using System.Security.Policy;
+using Microsoft.SharePoint.Client;
 
 namespace PERevitTab.Commands.DT.UDP
 {
@@ -26,70 +29,87 @@ namespace PERevitTab.Commands.DT.UDP
     {
         public static IList<SpatialElement> CollectRooms(Document doc)
         {
-            // retrieve only placed rooms (i.e. where area > 0 and location is not null)
-            IList<SpatialElement> rooms = new FilteredElementCollector(doc)
-                .OfCategory(BuiltInCategory.OST_Rooms)
-                .WhereElementIsNotElementType()
-                .Cast<SpatialElement>()
-                .Where(r => r.Area != 0 && r.Location != null)
-                .ToList();
-
-            return rooms;
-        }
-        public static List<object> ParseRoomData(IList<SpatialElement> rooms)
-        {
-            // instantiate a list of objects to hold our room information (which will be a Dictionary<string, string>)
-            List<object> roomsList = new List<object>();
-
-            // loop through the collected rooms
-            foreach (SpatialElement r in rooms)
+            try
             {
-                // instantiate a dictionary to hold the SP column headers and the associated values
-                Dictionary<string, string> roomsInfo = new Dictionary<string, string>();
+                // retrieve only placed rooms (i.e. where area > 0 and location is not null)
+                IList<SpatialElement> rooms = new FilteredElementCollector(doc)
+                    .OfCategory(BuiltInCategory.OST_Rooms)
+                    .WhereElementIsNotElementType()
+                    .Cast<SpatialElement>()
+                    .Where(r => r.Area != 0 && r.Location != null)
+                    .ToList();
 
-                // first, deal with the custom parameters
-                foreach (string paramName in SharepointConstants.Dictionaries.newRevitRoomParameters.Keys)
-                {
-                    Parameter p = r.LookupParameter(paramName);
-                    switch (p.Definition.ParameterType)
-                    {
-                        case ParameterType.Text:
-                            roomsInfo[paramName] = r.LookupParameter(paramName).AsString();
-                            break;
-                        case ParameterType.MultilineText:
-                            roomsInfo[paramName] = r.LookupParameter(paramName).AsString();
-                            break;
-                        case ParameterType.YesNo:
-                            roomsInfo[paramName] = r.LookupParameter(paramName).AsValueString();
-                            break;
-                        case ParameterType.Number:
-                            roomsInfo[paramName] = r.LookupParameter(paramName).AsValueString();
-                            break;
-                        case ParameterType.Integer:
-                            roomsInfo[paramName] = r.LookupParameter(paramName).AsValueString();
-                            break;
-                        default:
-                            break;
-                    }
-                }
-
-                // next, the built-in parameters
-                roomsInfo["vol_Title"] = r.Name;
-                roomsInfo["revit_room_number"] = r.Number;
-                roomsInfo["revit_room_element_id"] = r.Id.ToString();
-                roomsInfo["comments"] = r.get_Parameter(BuiltInParameter.ALL_MODEL_INSTANCE_COMMENTS).AsString();
-
-                // finally, the built-in spatial parameters
-                Room ro = (Room)r;
-                roomsInfo["revit_room_volume"] = ro.Volume.ToString();
-                roomsInfo["revit_room_height"] = ro.UnboundedHeight.ToString();
-                roomsInfo["area_net"] = ro.Area.ToString();
-
-                roomsList.Add(roomsInfo);
+                return rooms;
             }
-            return roomsList;
+            catch (Exception e)
+            {
+                MessageBox.Show($"Error collecting Revit rooms: {e}");
+                return null;
+            }
         }
-        public static ExternalDefinition AddSharedParameter(Document doc, Application app, string name, ParameterType type, BuiltInCategory cat, BuiltInParameterGroup group, bool instance)
+        public static List<object> ParseRoomData(IList<SpatialElement> rooms, Dictionary<string, ParameterType> parameterTypeMappings)
+        {
+            try
+            {
+                // instantiate a list of objects to hold our room information (which will be a Dictionary<string, string>)
+                List<object> roomsList = new List<object>();
+
+                // loop through the collected rooms
+                foreach (SpatialElement r in rooms)
+                {
+                    // instantiate a dictionary to hold the SP column headers and the associated values
+                    Dictionary<string, string> roomsInfo = new Dictionary<string, string>();
+
+                    // first, deal with the custom parameters
+                    foreach (string paramName in parameterTypeMappings.Keys)
+                    {
+                        Parameter p = r.LookupParameter(paramName);
+                        switch (p.Definition.ParameterType)
+                        {
+                            case ParameterType.Text:
+                                roomsInfo[paramName] = r.LookupParameter(paramName).AsString();
+                                break;
+                            case ParameterType.MultilineText:
+                                roomsInfo[paramName] = r.LookupParameter(paramName).AsString();
+                                break;
+                            case ParameterType.YesNo:
+                                roomsInfo[paramName] = r.LookupParameter(paramName).AsValueString();
+                                break;
+                            case ParameterType.Number:
+                                roomsInfo[paramName] = r.LookupParameter(paramName).AsValueString();
+                                break;
+                            case ParameterType.Integer:
+                                roomsInfo[paramName] = r.LookupParameter(paramName).AsValueString();
+                                break;
+                            default:
+                                break;
+                        }
+                    }
+
+                    // next, the built-in parameters
+                    roomsInfo["vol_Title"] = r.Name;
+                    roomsInfo["revit_room_number"] = r.Number;
+                    roomsInfo["revit_room_element_id"] = r.Id.ToString();
+                    roomsInfo["comments"] = r.get_Parameter(BuiltInParameter.ALL_MODEL_INSTANCE_COMMENTS).AsString();
+
+                    // finally, the built-in spatial parameters
+                    Room ro = (Room)r;
+                    roomsInfo["revit_room_volume"] = ro.Volume.ToString();
+                    roomsInfo["revit_room_height"] = ro.UnboundedHeight.ToString();
+                    roomsInfo["area_net"] = ro.Area.ToString();
+
+                    // add the parsed info to the return list
+                    roomsList.Add(roomsInfo);
+                }
+                return roomsList;
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show($"Error parsing room parameters: {e}");
+                return null;
+            }
+        }
+        public static ExternalDefinition AddSharedParameter(Document doc, Autodesk.Revit.ApplicationServices.Application app, string name, ParameterType type, BuiltInCategory cat, BuiltInParameterGroup group, bool instance)
         {
             using (Transaction t = new Transaction(doc))
             {
@@ -102,7 +122,7 @@ namespace PERevitTab.Commands.DT.UDP
                     string tempFile = Path.GetTempFileName() + ".txt";
 
                     // assign the temporary shared param file to the current application
-                    using (File.Create(tempFile)) { }
+                    using (System.IO.File.Create(tempFile)) { }
                     app.SharedParametersFilename = tempFile;
 
                     // initialize some external definition creation options, passing in our param name and type
@@ -122,7 +142,7 @@ namespace PERevitTab.Commands.DT.UDP
                     // reset the application's shared parameter file to the original
                     app.SharedParametersFilename = oriFile;
                     // delete the temporary shared param file
-                    File.Delete(tempFile);
+                    System.IO.File.Delete(tempFile);
 
                     // create a new category set and add our category to the category set
                     CategorySet categorySet = app.Create.NewCategorySet();
@@ -139,21 +159,23 @@ namespace PERevitTab.Commands.DT.UDP
                     // check if the binding is successful
                     if (!map.Insert(def, binding, group))
                     {
-                        TaskDialog.Show("Error", $"Failed to create Project parameter '{name}' :(");
+                        MessageBox.Show($"Error making shared parameter {name}");
                         t.RollBack();
                     }
+
+                    // return the external definition
                     t.Commit();
-                    return def; // return the external definition
+                    return def; 
                 }
                 catch (Exception e)
                 {
-                    TaskDialog.Show("Error", e.ToString());
+                    MessageBox.Show($"Error making shared parameter {name}: {e}");
                     t.RollBack();
                     return null;
                 }
             }
         }
-        public static Dictionary<string, ExternalDefinition> AddSharedParametersFromList(Document doc, Application app, Dictionary<string, ParameterType> parameterTypeMappings, BuiltInCategory category, BuiltInParameterGroup parameterGroup)
+        public static Dictionary<string, ExternalDefinition> AddSharedParametersFromList(Document doc, Autodesk.Revit.ApplicationServices.Application app, Dictionary<string, ParameterType> parameterTypeMappings, BuiltInCategory category, BuiltInParameterGroup parameterGroup)
         {
             try
             {
@@ -181,7 +203,7 @@ namespace PERevitTab.Commands.DT.UDP
             }
             catch (Exception e)
             {
-                TaskDialog.Show("Error:", e.ToString());
+                MessageBox.Show($"Error making shared parameters from list: {e}");
                 return null;
             }
         }
@@ -200,7 +222,125 @@ namespace PERevitTab.Commands.DT.UDP
             ProjectInfo pInfo = doc.ProjectInformation;
             TaskDialog.Show("Test", pInfo.Name);
         }
-        public static List<Room> GenerateRooms(Document doc, Phase phase, SP.ListItemCollection spListItems, Dictionary<string, ExternalDefinition> parameterList)
+        public static bool SetRoomParametersByExternalDefinition(Room r, ListItem listItem, Dictionary<string, ExternalDefinition> parameterList)
+        {
+            try
+            {
+                // loop through shared parameter definitions we created
+                foreach (KeyValuePair<string, ExternalDefinition> paramDef in parameterList)
+                {
+                    // check if the parameter name exists as a column header in sharepoint data
+                    if (listItem.FieldValues.ContainsKey(paramDef.Key))
+                    {
+                        // get the matching value of the column header, or null
+                        var spValue = listItem[paramDef.Key] ?? null;
+
+                        // retrieve the matching parameter in the room object
+                        Parameter p = r.get_Parameter(paramDef.Value);
+
+                        // check the parameter type of the retrieved parameter and set the parameter value appropriately
+                        switch (p.Definition.ParameterType)
+                        {
+                            case ParameterType.Text:
+                                if (spValue != null) p.Set(spValue.ToString());
+                                break;
+                            case ParameterType.MultilineText:
+                                if (spValue != null) p.Set(spValue.ToString());
+                                break;
+                            case ParameterType.YesNo:
+                                if (spValue.ToString() == "Yes") p.Set(1);
+                                else if (spValue.ToString() == "No") p.Set(0);
+                                break;
+                            case ParameterType.Number:
+                                if (spValue != null) p.Set(Convert.ToDouble(spValue));
+                                break;
+                            case ParameterType.Integer:
+                                if (spValue != null) p.Set(Convert.ToInt32(spValue));
+                                break;
+                            default:
+                                break;
+                        }
+                    }
+                    else return false;
+                }
+
+                // set the room's comment parameter value to the value of the Comments column if it exists
+                if (listItem.FieldValues.ContainsKey(SharepointConstants.ColumnHeaders.Comments)) r.get_Parameter(BuiltInParameter.ALL_MODEL_INSTANCE_COMMENTS).Set(listItem[SharepointConstants.ColumnHeaders.Comments].ToString());
+                else return false;
+
+                // lastly, set the room's name to the value of the Title column if it exists
+                if (listItem.FieldValues.ContainsKey(SharepointConstants.ColumnHeaders.Title)) r.Name = listItem[SharepointConstants.ColumnHeaders.Title].ToString();
+                else return false;
+
+                // if we don't have any issues return true
+                return true;
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show($"Error setting room parameters: {e}");
+                return false;
+            }
+        }
+        public static bool SetRoomParametersByParameterType(Room r, ListItem listItem, Dictionary<string, ParameterType> parameterTypeMappings)
+        {
+            try
+            {
+                // loop through parameter type mappings dictionary
+                foreach (string pName in parameterTypeMappings.Keys)
+                {
+                    // check if the parameter name exists as a column header in sharepoint data
+                    if (listItem.FieldValues.ContainsKey(pName))
+                    {
+                        // get the matching value of the column header, or null
+                        var spValue = listItem[pName] ?? null;
+
+                        // retrieve the matching parameter in the room object
+                        Parameter p = r.LookupParameter(pName);
+
+                        // check the parameter type of the retrieved parameter and set the parameter value appropriately
+                        switch (p.Definition.ParameterType)
+                        {
+                            case ParameterType.Text:
+                                if (spValue != null) p.Set(spValue.ToString());
+                                break;
+                            case ParameterType.MultilineText:
+                                if (spValue != null) p.Set(spValue.ToString());
+                                break;
+                            case ParameterType.YesNo:
+                                if (spValue.ToString() == "Yes") p.Set(1);
+                                else if (spValue.ToString() == "No") p.Set(0);
+                                break;
+                            case ParameterType.Number:
+                                if (spValue != null) p.Set(Convert.ToDouble(spValue));
+                                break;
+                            case ParameterType.Integer:
+                                if (spValue != null) p.Set(Convert.ToInt32(spValue));
+                                break;
+                            default:
+                                break;
+                        }
+                    }
+                    else return false;
+                }
+
+                // set the room's comment parameter value to the value of the Comments column if it exists
+                if (listItem.FieldValues.ContainsKey(SharepointConstants.ColumnHeaders.Comments)) r.get_Parameter(BuiltInParameter.ALL_MODEL_INSTANCE_COMMENTS).Set(listItem[SharepointConstants.ColumnHeaders.Comments].ToString());
+                else return false;
+
+                // lastly, set the room's name to the value of the Title column if it exists
+                if (listItem.FieldValues.ContainsKey(SharepointConstants.ColumnHeaders.Title)) r.Name = listItem[SharepointConstants.ColumnHeaders.Title].ToString();
+                else return false;
+
+                // if we don't have any issues, return true
+                return true;
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show($"Error setting room parameters: {e}");
+                return false;
+            }
+        }
+        public static List<Room> GenerateNewRooms(Document doc, Phase phase, SP.ListItemCollection spListItems, Dictionary<string, ExternalDefinition> parameterList)
         {
             using (Transaction t = new Transaction(doc))
             {
@@ -216,58 +356,108 @@ namespace PERevitTab.Commands.DT.UDP
                         // make a new room for each item
                         Room newRoom = doc.Create.NewRoom(phase);
 
-                        // loop through shared parameter definitions we created
-                        foreach (KeyValuePair<string, ExternalDefinition> paramDef in parameterList)
+                        // set the parameters of the new room
+                        bool synced = SetRoomParametersByExternalDefinition(
+                            newRoom, 
+                            listItem, 
+                            parameterList);
+
+                        // if successfully added, add the new room to the list of created rooms
+                        if (synced) createdRooms.Add(newRoom);
+                        else
                         {
-                            // check if the parameter name exists as a column header in sharepoint data
-                            if (listItem.FieldValues.ContainsKey(paramDef.Key))
-                            {
-                                // get the matching value of the column header, or null
-                                var spValue = listItem[paramDef.Key] ?? null;
-
-                                // retrieve the matching parameter in the room object
-                                Parameter p = newRoom.get_Parameter(paramDef.Value);
-
-                                // check the parameter type of the retrieved parameter and set the parameter value appropriately
-                                switch (p.Definition.ParameterType)
-                                {
-                                    case ParameterType.Text:
-                                        if (spValue != null) p.Set(spValue.ToString());
-                                        break;
-                                    case ParameterType.MultilineText:
-                                        if (spValue != null) p.Set(spValue.ToString());
-                                        break;
-                                    case ParameterType.YesNo:
-                                        if (spValue.ToString() == "Yes") p.Set(1);
-                                        else if (spValue.ToString() == "No") p.Set(0);
-                                        break;
-                                    case ParameterType.Number:
-                                        if (spValue != null) p.Set(Convert.ToDouble(spValue));
-                                        break;
-                                    case ParameterType.Integer:
-                                        if (spValue != null) p.Set(Convert.ToInt32(spValue));
-                                        break;
-                                    default:
-                                        break;
-                                }
-                            }
+                            MessageBox.Show($"Error setting room parameters.");
+                            t.RollBack();
+                            return null;
                         }
-
-                        // set the room's comment parameter value to the value of the Comments column if it exists
-                        if (listItem.FieldValues.ContainsKey("Comments")) newRoom.get_Parameter(BuiltInParameter.ALL_MODEL_INSTANCE_COMMENTS).Set(listItem["Comments"].ToString());
-
-                        // lastly, set the room's name to the value of the Title column if it exists
-                        if (listItem.FieldValues.ContainsKey("Title")) newRoom.Name = listItem["Title"].ToString();
-
-                        // add the room to the list of created rooms
-                        createdRooms.Add(newRoom);
                     }
+
+                    // commit the transaction and return the list of new rooms
                     t.Commit();
                     return createdRooms;
                 }
                 catch (Exception e)
                 {
-                    TaskDialog.Show("Error", e.ToString());
+                    MessageBox.Show($"Error creating new rooms: {e}");
+                    t.RollBack();
+                    return null;
+                }
+            }
+        }
+        public static List<Room> SyncExistingRooms(Document doc, Phase phase, IList<SpatialElement> rooms, SP.ListItemCollection spListItems, Dictionary<string, ParameterType> parameterTypeMappings)
+        {
+            using (Transaction t = new Transaction(doc)) 
+            {
+                t.Start("Sync Sharepoint Rooms");
+                try
+                {
+                    // initialize a list to hold the rooms
+                    List<Room> syncedRooms = new List<Room>();
+
+                    // iterate through SP list items
+                    foreach (ListItem listItem in spListItems)
+                    {
+                        // iterate through revit rooms
+                        foreach (SpatialElement r in rooms)
+                        {
+                            // check if the SP list does has a column header "vif_id"
+                            if (listItem.FieldValues.ContainsKey(SharepointConstants.ColumnHeaders.vif_id))
+                            {
+                                // check if the revit room's vif_id matches the SP list item's vif_id
+                                if (listItem[SharepointConstants.ColumnHeaders.vif_id] == r.LookupParameter(SharepointConstants.ColumnHeaders.vif_id))
+                                {
+                                    // set the room's parameters
+                                    bool synced = SetRoomParametersByParameterType(
+                                        r as Room,
+                                        listItem,
+                                        parameterTypeMappings);
+
+                                    // if successfully added, add the room to the list of synced rooms
+                                    if (synced) syncedRooms.Add(r as Room);
+                                    else
+                                    {
+                                        MessageBox.Show($"Error setting room parameters.");
+                                        t.RollBack();
+                                        return null;
+                                    }
+                                }
+                                else
+                                {
+                                    // create a new room
+                                    Room newRoom = doc.Create.NewRoom(phase);
+
+                                    // set the new room's parameters
+                                    bool synced = SetRoomParametersByParameterType(
+                                        newRoom,
+                                        listItem,
+                                        parameterTypeMappings);
+
+                                    // if successfully added, add the room to the list of synced rooms
+                                    if (synced) syncedRooms.Add(newRoom);
+                                    else
+                                    {
+                                        MessageBox.Show($"Error setting room parameters.");
+                                        t.RollBack();
+                                        return null;
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                MessageBox.Show("Error, column 'vif_id' does not exist. Check the sharepoint list and try again.");
+                                t.RollBack();
+                                return null;
+                            }
+                        }
+                    }
+
+                    // commit the transaction and return the list of synced rooms
+                    t.Commit();
+                    return syncedRooms;
+                }
+                catch (Exception e)
+                {
+                    MessageBox.Show($"Error creating new rooms: {e}");
                     t.RollBack();
                     return null;
                 }
@@ -275,8 +465,16 @@ namespace PERevitTab.Commands.DT.UDP
         }
         public static Phase GetLatestPhase(Document doc)
         {
-            PhaseArray allPhases = doc.Phases;
-            return allPhases.get_Item(allPhases.Size - 1);
+            try
+            {
+                PhaseArray allPhases = doc.Phases;
+                return allPhases.get_Item(allPhases.Size - 1);
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show($"Error getting latest phase: {e}");
+                return null;
+            }
         }
         public static bool CheckSharepointPhases(Document doc, SP.ListItemCollection spPhases)
         {

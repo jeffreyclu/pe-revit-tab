@@ -257,7 +257,6 @@
             this.Name = "UDPInterface";
             this.ShowIcon = false;
             this.Text = "UDPInterface";
-            this.TopMost = true;
             this.Load += new System.EventHandler(this.UDPInterface_Load);
             this.loginPanel.ResumeLayout(false);
             this.loginPanel.PerformLayout();
