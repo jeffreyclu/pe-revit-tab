@@ -24,19 +24,16 @@ namespace PERevitTab.Commands.DT.UDP
 {
     class RevitMethods
     {
-        public static IList<SpatialElement> CollectRooms(Document doc)
+        public static IList<Element> CollectRooms(Document doc)
         {
-            // retrieve only placed rooms (i.e. where area > 0 and location is not null)
-            IList<SpatialElement> rooms = new FilteredElementCollector(doc)
+            IList<Element> rooms = new FilteredElementCollector(doc)
                 .OfCategory(BuiltInCategory.OST_Rooms)
                 .WhereElementIsNotElementType()
-                .Cast<SpatialElement>()
-                .Where(r => r.Area != 0 && r.Location != null)
-                .ToList();
+                .ToElements();
 
             return rooms;
         }
-        public static List<object> ParseRoomData(IList<SpatialElement> rooms)
+        public static List<object> ParseRoomData(IList<Element> rooms)
         {
             // instantiate a list of objects to hold our room information (which will be a Dictionary<string, string>)
             List<object> roomsList = new List<object>();
@@ -47,7 +44,20 @@ namespace PERevitTab.Commands.DT.UDP
                 // instantiate a dictionary to hold the SP column headers and the associated values
                 Dictionary<string, string> roomsInfo = new Dictionary<string, string>();
 
-                // first, deal with the custom parameters
+                // first deal with the built-in parameters
+                roomsInfo["vol_Title"] = r.Name;
+                roomsInfo["revit_room_number"] = r.Number;
+                roomsInfo["revit_room_element_id"] = r.Id.ToString();
+                roomsInfo["comments"] = r.get_Parameter(BuiltInParameter.ALL_MODEL_INSTANCE_COMMENTS).AsString();
+
+                // next deal with the built-in spatial parameters
+                Room ro = (Room)r;
+                roomsInfo["revit_room_volume"] = ro.Volume.ToString();
+                roomsInfo["revit_room_height"] = ro.UnboundedHeight.ToString();
+                roomsInfo["area_net"] = r.Area.ToString();
+                ro.Area.ToString();
+
+                // lastly, deal with the custom parameters
                 foreach (string paramName in SharepointConstants.Dictionaries.newRevitRoomParameters.Keys)
                 {
                     Parameter p = r.LookupParameter(paramName);
@@ -72,19 +82,6 @@ namespace PERevitTab.Commands.DT.UDP
                             break;
                     }
                 }
-
-                // next, the built-in parameters
-                roomsInfo["vol_Title"] = r.Name;
-                roomsInfo["revit_room_number"] = r.Number;
-                roomsInfo["revit_room_element_id"] = r.Id.ToString();
-                roomsInfo["comments"] = r.get_Parameter(BuiltInParameter.ALL_MODEL_INSTANCE_COMMENTS).AsString();
-
-                // finally, the built-in spatial parameters
-                Room ro = (Room)r;
-                roomsInfo["revit_room_volume"] = ro.Volume.ToString();
-                roomsInfo["revit_room_height"] = ro.UnboundedHeight.ToString();
-                roomsInfo["area_net"] = ro.Area.ToString();
-
                 roomsList.Add(roomsInfo);
             }
             return roomsList;
@@ -185,7 +182,7 @@ namespace PERevitTab.Commands.DT.UDP
                 return null;
             }
         }
-        public static bool CheckRoomParameters(IList<SpatialElement> rooms, Dictionary<string, ParameterType> parameterTypeMappings)
+        public static bool CheckRoomParameters(IList<Element> rooms, Dictionary<string, ParameterType> parameterTypeMappings)
         {
             Element room = rooms.First();
             foreach (string pName in parameterTypeMappings.Keys)
