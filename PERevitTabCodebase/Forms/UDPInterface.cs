@@ -40,12 +40,6 @@ namespace PERevitTab.Forms
         private Document _doc { get; set; }
         private Autodesk.Revit.ApplicationServices.Application _app { get; set; }
         SP.ClientContext _context { get; set; }
-        private List<Room> _createdRooms { get; set; }
-        private IList<SpatialElement> _placedRooms { get; set; }
-        private bool _roomParametersChecked { get; set; }
-        private List<object> _placedRoomsData { get; set; }
-        private bool _roomsUploaded { get; set; }
-        private SP.List _SPWriteList { get; set; }
         #endregion
 
         #region main form method
@@ -133,26 +127,17 @@ namespace PERevitTab.Forms
             IList<Element> collectedRooms = RevitMethods.GetElements(
                 _doc,
                 BuiltInCategory.OST_Rooms);
-            if (collectedRooms == null)
-            {
-                return null;
-            }
+            if (collectedRooms == null) return null;
 
             // get items from SP list
             SP.ListItemCollection spRooms = GetItemsFromSharepointList(
                     SharepointConstants.Links.spReadList,
                     SharepointConstants.Links.allItems);
-            if (spRooms == null)
-            {
-                return null;
-            }
+            if (spRooms == null) return null;
 
             // get the latest phase
             Phase latestPhase = RevitMethods.GetLatestPhase(_doc);
-            if (latestPhase == null)
-            {
-                return null;
-            }
+            if (latestPhase == null) return null;
 
             // check if room parameters exist
             bool roomParamsExist = RevitMethods.CheckParametersExist(
@@ -169,10 +154,7 @@ namespace PERevitTab.Forms
                         SharepointConstants.Dictionaries.newRevitRoomParameters,
                         BuiltInCategory.OST_Rooms,
                         BuiltInParameterGroup.PG_REFERENCE);
-                if (roomParametersCreated == null)
-                {
-                    return null;
-                }
+                if (roomParametersCreated == null) return null;
 
                 // generate the rooms
                 syncedRooms = RevitMethods.CreateRooms(
@@ -194,83 +176,37 @@ namespace PERevitTab.Forms
             return syncedRooms;
         }
 
-        private bool UploadToSharepoint()
+        private List<object> UploadToSharepoint()
         {
             // collect rooms from the model, return false if there are none
-            try
-            {
-                _placedRooms = RevitMethods.GetPlacedRooms(_doc);
-                if (_placedRooms == null)
-                {
-                    MessageBox.Show("Error: no rooms in model.");
-                    return false;
-                }
-            }
-            catch (Exception e)
-            {
-                MessageBox.Show(e.ToString());
-                return false;
-            }
+            IList<SpatialElement> placedRooms = RevitMethods.GetPlacedRooms(_doc);
+            if (placedRooms == null) return null;
 
             // check if the custom room parameters exist
-            try
-            {
-                _roomParametersChecked = RevitMethods.CheckParametersExist(
-                    _placedRooms,
-                    SharepointConstants.Dictionaries.newRevitRoomParameters);
-                if (_roomParametersChecked == false) {
-                    MessageBox.Show("Error, project has not been synced. Sync project and try again.");
-                    return false;
-                }
-            }
-            catch (Exception e)
-            {
-                MessageBox.Show(e.ToString());
-                return false;
-            }
+            bool roomParametersCheck = RevitMethods.CheckParametersExist(
+                placedRooms,
+                SharepointConstants.Dictionaries.newRevitRoomParameters);
+            if (roomParametersCheck == false) return null;
 
             // collect the room info for writing to sharepoint
-            try
-            {
-                _placedRoomsData = RevitMethods.ParseRoomData(
-                    _placedRooms,
-                    SharepointConstants.Dictionaries.newRevitRoomParameters
-                    );
-            }
-            catch (Exception e)
-            {
-                MessageBox.Show(e.ToString());
-                return false;
-            }
+            List<object> placedRoomsData = RevitMethods.ParseRoomData(
+                    placedRooms,
+                    SharepointConstants.Dictionaries.newRevitRoomParameters);
+            if (placedRoomsData == null) return null;
 
-            // get the write list from sharepoint
-            try
-            {
-               _SPWriteList = SharepointMethods.GetListFromWeb(
+            SP.List SPWriteList = SharepointMethods.GetListFromWeb(
                 _context,
                 SharepointConstants.Links.spWriteList);
-            }
-            catch (Exception e)
-            {
-                MessageBox.Show(e.ToString());
-                return false;
-            }
 
             // write the room data to the write list
-            try { 
-                _roomsUploaded = SharepointMethods.AddItemsToList(
-                    _context, 
-                    _SPWriteList, 
-                    _placedRoomsData);
-            }
-            catch (Exception e)
-            {
-                MessageBox.Show(e.ToString());
-                return false;
-            }
+            bool roomsUploaded = SharepointMethods.AddItemsToList(
+                _context, 
+                SPWriteList, 
+                placedRoomsData);
+            if (roomsUploaded == false) return null;
             
-            // if we get to the end then return true
-            return true;
+            // if we get to the end then return the written data
+            return placedRoomsData;
         }
         #endregion
 
@@ -337,12 +273,13 @@ namespace PERevitTab.Forms
             // check login
             CheckLogin();
 
-            // get list from context
-            bool roomsUploaded = UploadToSharepoint();
+            // run upload method
+            List<object> uploadedRooms = UploadToSharepoint();
 
-            if (roomsUploaded)
+            // check if upload method was successful
+            if (uploadedRooms != null && uploadedRooms.Count > 0)
             {
-                MessageBox.Show($"Success, {_placedRoomsData.Count} rooms uploaded.");
+                MessageBox.Show($"Success, {uploadedRooms.Count} rooms uploaded.");
             }
             else
             {
