@@ -108,10 +108,17 @@
             this.Controls.Add(this.textBox1);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.label1);
+            this.MaximizeBox = false;
+            this.MaximumSize = new System.Drawing.Size(400, 300);
+            this.MinimizeBox = false;
+            this.MinimumSize = new System.Drawing.Size(400, 300);
             this.Name = "SharepointLogin";
             this.Padding = new System.Windows.Forms.Padding(20);
+            this.ShowIcon = false;
+            this.SizeGripStyle = System.Windows.Forms.SizeGripStyle.Hide;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "SharepointLogin";
+            this.TopMost = true;
             this.ResumeLayout(false);
             this.PerformLayout();
 

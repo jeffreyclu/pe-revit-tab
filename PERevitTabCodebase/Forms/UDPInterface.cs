@@ -40,14 +40,11 @@ namespace PERevitTab.Forms
         private Document _doc { get; set; }
         private Autodesk.Revit.ApplicationServices.Application _app { get; set; }
         SP.ClientContext _context { get; set; }
-        private Phase _latestPhase { get; set; }
         private List<Room> _createdRooms { get; set; }
-        private Dictionary<string, ExternalDefinition> _roomParameters { get; set; }
-        private IList<Element> _collectedRooms { get; set; }
+        private IList<SpatialElement> _placedRooms { get; set; }
         private bool _roomParametersChecked { get; set; }
-        private List<object> _collectedRoomsData { get; set; }
+        private List<object> _placedRoomsData { get; set; }
         private bool _roomsUploaded { get; set; }
-        private SP.ListItemCollection _SPListItems { get; set; }
         private SP.List _SPWriteList { get; set; }
         #endregion
 
@@ -128,65 +125,73 @@ namespace PERevitTab.Forms
             }
         }
         
-        private bool SyncToSharepoint()
+        private List<Room> SyncToSharepoint()
         {
-            // get items from SP list
-            try
+            List<Room> syncedRooms = new List<Room>();
+
+            // get current revit rooms
+            IList<Element> collectedRooms = RevitMethods.GetElements(
+                _doc,
+                BuiltInCategory.OST_Rooms);
+            if (collectedRooms == null)
             {
-                _SPListItems = GetItemsFromSharepointList(
+                return null;
+            }
+
+            // get items from SP list
+            SP.ListItemCollection spRooms = GetItemsFromSharepointList(
                     SharepointConstants.Links.spReadList,
                     SharepointConstants.Links.allItems);
-            }
-            catch (Exception e)
+            if (spRooms == null)
             {
-                MessageBox.Show(e.ToString());
-                return false;
+                return null;
             }
 
-            // create new room shared parameters
-            try
+            // get the latest phase
+            Phase latestPhase = RevitMethods.GetLatestPhase(_doc);
+            if (latestPhase == null)
             {
-                _roomParameters = RevitMethods.AddSharedParametersFromList(
+                return null;
+            }
+
+            // check if room parameters exist
+            bool roomParamsExist = RevitMethods.CheckParametersExist(
+                collectedRooms,
+                SharepointConstants.Dictionaries.newRevitRoomParameters);
+
+            // if they don't exist
+            if (!roomParamsExist)
+            {
+                // make new parameters
+                Dictionary<string, ExternalDefinition> roomParametersCreated = RevitMethods.CreateSharedParameters(
+                        _doc,
+                        _app,
+                        SharepointConstants.Dictionaries.newRevitRoomParameters,
+                        BuiltInCategory.OST_Rooms,
+                        BuiltInParameterGroup.PG_REFERENCE);
+                if (roomParametersCreated == null)
+                {
+                    return null;
+                }
+
+                // generate the rooms
+                syncedRooms = RevitMethods.CreateRooms(
+                        _doc,
+                        latestPhase,
+                        spRooms,
+                        roomParametersCreated);
+            }
+            else
+            {
+                // sync the existing rooms
+                syncedRooms = RevitMethods.UpdateRooms(
                     _doc,
-                    _app,
-                    SharepointConstants.Dictionaries.newRevitRoomParameters,
-                    BuiltInCategory.OST_Rooms,
-                    BuiltInParameterGroup.PG_REFERENCE);
+                    latestPhase,
+                    collectedRooms,
+                    spRooms,
+                    SharepointConstants.Dictionaries.newRevitRoomParameters);
             }
-            catch (Exception e)
-            {
-                MessageBox.Show(e.ToString());
-                return false;
-            }
-
-            // get the latest revit phase for room creation
-            try
-            {
-                _latestPhase = RevitMethods.GetLatestPhase(_doc);
-            }
-            catch (Exception e)
-            {
-                MessageBox.Show(e.ToString());
-                return false;
-            }
-
-            // generate the rooms
-            try
-            {
-                _createdRooms = RevitMethods.GenerateRooms(
-                    _doc,
-                    _latestPhase,
-                    _SPListItems,
-                    _roomParameters);
-            }
-            catch (Exception e)
-            {
-                MessageBox.Show(e.ToString());
-                return false;
-            }
-
-            // if we get to the end then return true
-            return true;
+            return syncedRooms;
         }
 
         private bool UploadToSharepoint()
@@ -194,8 +199,8 @@ namespace PERevitTab.Forms
             // collect rooms from the model, return false if there are none
             try
             {
-                _collectedRooms = RevitMethods.CollectRooms(_doc);
-                if (_collectedRooms == null)
+                _placedRooms = RevitMethods.GetPlacedRooms(_doc);
+                if (_placedRooms == null)
                 {
                     MessageBox.Show("Error: no rooms in model.");
                     return false;
@@ -210,8 +215,8 @@ namespace PERevitTab.Forms
             // check if the custom room parameters exist
             try
             {
-                _roomParametersChecked = RevitMethods.CheckRoomParameters(
-                    _collectedRooms,
+                _roomParametersChecked = RevitMethods.CheckParametersExist(
+                    _placedRooms,
                     SharepointConstants.Dictionaries.newRevitRoomParameters);
                 if (_roomParametersChecked == false) {
                     MessageBox.Show("Error, project has not been synced. Sync project and try again.");
@@ -227,7 +232,10 @@ namespace PERevitTab.Forms
             // collect the room info for writing to sharepoint
             try
             {
-                _collectedRoomsData = RevitMethods.ParseRoomData(_collectedRooms);
+                _placedRoomsData = RevitMethods.ParseRoomData(
+                    _placedRooms,
+                    SharepointConstants.Dictionaries.newRevitRoomParameters
+                    );
             }
             catch (Exception e)
             {
@@ -253,7 +261,7 @@ namespace PERevitTab.Forms
                 _roomsUploaded = SharepointMethods.AddItemsToList(
                     _context, 
                     _SPWriteList, 
-                    _collectedRoomsData);
+                    _placedRoomsData);
             }
             catch (Exception e)
             {
@@ -308,12 +316,12 @@ namespace PERevitTab.Forms
             CheckLogin();
 
             // run sync method
-            bool synced = SyncToSharepoint();
+            List<Room> syncedRooms = SyncToSharepoint();
 
             // check if sync method was successful
-            if (synced)
+            if (syncedRooms != null && syncedRooms.Count > 0)
             {
-                MessageBox.Show($"Success, {_createdRooms.Count} rooms synced.");
+                MessageBox.Show($"Success, {syncedRooms.Count} rooms synced.");
                 (string writeDate, string writeTime) = FormatDateTime();
                 lastSyncedLabel.Text = $"Last synced {writeDate} at {writeTime}";
                 ReloadForm();
@@ -334,7 +342,7 @@ namespace PERevitTab.Forms
 
             if (roomsUploaded)
             {
-                MessageBox.Show($"Success, {_collectedRoomsData.Count} rooms uploaded.");
+                MessageBox.Show($"Success, {_placedRoomsData.Count} rooms uploaded.");
             }
             else
             {
