@@ -127,8 +127,14 @@ namespace PERevitTab.Data
             public static string vol_sort_id = "vol_sort_id";
             public static string vol_sorted = "vol_sorted";
             public static string vol_volume_sort = "vol_volume_sort";
-            public static string Comments = "Comments";
+            public static string comments = "comments";
             public static string Title = "Title";
+            public static string id = "id";
+            public static string vol_Title = "vol_Title";
+            public static string revit_room_number = "revit_room_number";
+            public static string revit_room_element_id = "revit_room_element_id";
+            public static string revit_room_volume = "revit_room_volume";
+            public static string revit_room_height = "revit_room_height";
         }
         public static class Dictionaries
         {
