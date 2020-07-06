@@ -31,58 +31,9 @@ namespace PERevitTab.Data
             public static string projectPermissionsListName = @"cp_project_permissions";
             public static string allItems = "All Items";
         }
-
-        // public enum ColumnHeaders
-        //{
-        //    org1_Title,
-        //    org1_abbreviation,
-        //    org1_sort_id,
-        //    org1_volume_sort,
-        //    org2_Title,
-        //    org2_abbreviation,
-        //    org2_sort_id,
-        //    org2_volume_sort,
-        //    org3_Title,
-        //    org3_abbreviation,
-        //    org3_sort_id,
-        //    org3_volume_sort,
-        //    org4_Title,
-        //    org4_abbreviation,
-        //    org4_sort_id,
-        //    org4_volume_sort,
-        //    org5_Title,
-        //    org5_abbreviation,
-        //    org5_sort_id,
-        //    org5_volume_sort,
-        //    org6_Title,
-        //    org6_abbreviation,
-        //    org6_sort_id,
-        //    org6_volume_sort,
-        //    org7_Title,
-        //    org7_abbreviation,
-        //    org7_sort_id,
-        //    org7_volume_sort,
-        //    vif_id,
-        //    is_depreciated,
-        //    pe_standard_Title,
-        //    leed_standard_Title,
-        //    ibc_standard_Title,
-        //    gross_factor,
-        //    area_net,
-        //    count_occupant_capacity,
-        //    count_occupant_non_capacity,
-        //    count_volume_capacity,
-        //    count_volume_non_capacity,
-        //    phase_created_Title,
-        //    phase_demolished_Title,
-        //    vol_abbreviation,
-        //    vol_sort_id,
-        //    vol_sorted,
-        //    vol_volume_sort,
-        //}
-
         public static class ColumnHeaders
         {
+            #region cp_published_volumes/cp_revit_volumes
             public static string org1_Title = "org1_Title";
             public static string org1_abbreviation = "org1_abbreviation";
             public static string org1_sort_id = "org1_sort_id";
@@ -136,6 +87,12 @@ namespace PERevitTab.Data
             public static string revit_room_element_id = "revit_room_element_id";
             public static string revit_room_volume = "revit_room_volume";
             public static string revit_room_height = "revit_room_height";
+            #endregion
+
+            #region translatedUser
+            public static string emailAddress = "emailAddress";
+            public static string nickname = "nickname";
+            #endregion
         }
         public static class Dictionaries
         {
