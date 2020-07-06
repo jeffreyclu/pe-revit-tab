@@ -33,10 +33,15 @@ namespace PERevitTab.Forms
     public partial class UDPInterface : System.Windows.Forms.Form
     {
         #region class variables
-        private bool _isLoggedIn = false;
         private string _username { get; set; }
         private SecureString _password { get; set; }
         private SP.ListItem _user { get; set; }
+        private SP.ListItem _project { get; set; }
+        private SP.ListItemCollection _projects { get; set; }
+        private bool _isLoggedIn = false;
+        private bool _isUserSelected = false;
+        private bool _isProjectSelected = false;
+        private bool _isProjectsFetched = false;
         private string _lastSynced { get; set; }
         private Document _doc { get; set; }
         private Autodesk.Revit.ApplicationServices.Application _app { get; set; }
@@ -60,13 +65,36 @@ namespace PERevitTab.Forms
             // grab username and password from the cache
             _username = SharepointConstants.Cache.username;
             _password = SharepointConstants.Cache.password;
-            _isLoggedIn = (_username != null && _password != null);
-            if (_isLoggedIn)
-            {
-                _context.Credentials = new SP.SharePointOnlineCredentials(_username, _password);
-            }
-        }
 
+            // if they have been previously set, then the user is logged in
+            _isLoggedIn = (_username != null && _password != null);
+            if (_isLoggedIn == false)
+            {
+                // if not logged in, do nothing
+                return;
+            }
+
+            // set the context credentials
+            _context.Credentials = new SP.SharePointOnlineCredentials(_username, _password);
+        }
+        private void CheckUser()
+        {
+            // grab the user from the cache
+            _user = SharepointConstants.Cache.user;
+            _isUserSelected = (_user != null);
+        }
+        private void CheckProjectSelected()
+        {
+            // grab the project from the cache
+            _project = SharepointConstants.Cache.project;
+            _isProjectSelected = (_project != null);
+        }
+        private void CheckProjectsFetched()
+        {
+            // grab the fetched projects from the cache
+            _projects = SharepointConstants.Cache.projects;
+            _isProjectsFetched = (_projects != null);
+        }
         private void ReloadForm()
         {
             // check if we are logged in and set visibility/text accordingly
@@ -82,6 +110,16 @@ namespace PERevitTab.Forms
                 lastSyncedLabel.Visible = true;
                 uploadButton.Enabled = true;
                 viewProjectButton.Enabled = true;
+
+                // check if a project has been selected or not
+                if (_isProjectSelected == true)
+                {
+                    projectList.Visible = false;
+                }
+                else
+                {
+                    projectList.Visible = true;
+                }
             }
             else
             {
@@ -92,6 +130,8 @@ namespace PERevitTab.Forms
                 lastSyncedLabel.Visible = false;
                 uploadButton.Enabled = false;
                 viewProjectButton.Enabled = false;
+                projectList.Items.Clear();
+                projectList.Visible = false;
             }
         }
         private void DisableForm()
@@ -108,7 +148,6 @@ namespace PERevitTab.Forms
             uploadButton.Enabled = false;
             viewProjectButton.Enabled = false;
         }
-
         private SP.ListItemCollection GetItemsFromSharepointList(string listName, string viewName)
         {
             try
@@ -139,8 +178,8 @@ namespace PERevitTab.Forms
         {
             // get all users from all users list
             SP.ListItemCollection allUsers = GetItemsFromSharepointList(
-                SharepointConstants.Links.userListName,
-                SharepointConstants.Links.allItems);
+                SharepointConstants.Links.userList,
+                SharepointConstants.Views.allItems);
             if (allUsers == null)
             {
                 return null;
@@ -148,8 +187,44 @@ namespace PERevitTab.Forms
 
             // get the user matching the logged in user's email address
             SP.ListItem currentUser = allUsers.Where(u => u.FieldValues["emailAddress"].ToString().ToLower() == _username.ToLower()).FirstOrDefault();
+            if (currentUser == null)
+            {
+                return null;
+            }
+
+            // store the user in cache
+            SharepointConstants.Cache.user = currentUser;
             return currentUser;
         }
+        private SP.ListItemCollection GetProjects()
+        {
+            // get projects from sharepoint
+            SP.ListItemCollection projects = GetItemsFromSharepointList(
+                SharepointConstants.Links.projectList,
+                SharepointConstants.Views.allItems
+                );
+            if (projects == null)
+            {
+                MessageBox.Show("Error: no projects available in Sharepoint.");
+                return null;
+            }
+
+            // store the projects in cache
+            SharepointConstants.Cache.projects = projects;
+            return projects;
+        }
+        public void DisplayProjects(SP.ListItemCollection allProjects)
+        {
+            projectList.Items.Clear();
+            projectList.MaxDropDownItems = allProjects.Count;
+            foreach (SP.ListItem p in allProjects)
+            {
+                string projectLabel = $"" +
+                    $"{p[SharepointConstants.ColumnHeaders.projectNumber]} " +
+                    $"{p[SharepointConstants.ColumnHeaders.Title]}";
+                projectList.Items.Add(projectLabel);
+            }
+    }
         private List<Room> SyncToSharepoint()
         {
             using (ProgressDialog pd = new ProgressDialog("Sync", 5))
@@ -173,7 +248,7 @@ namespace PERevitTab.Forms
                 pd.StartTask("Fetching Sharepoint data");
                 SP.ListItemCollection spRooms = GetItemsFromSharepointList(
                         SharepointConstants.Links.spReadList,
-                        SharepointConstants.Links.allItems);
+                        SharepointConstants.Views.allItems);
                 if (spRooms == null)
                 {
                     pd.Close();
@@ -238,7 +313,6 @@ namespace PERevitTab.Forms
                 return syncedRooms;
             }
         }
-
         private List<object> UploadToSharepoint()
         {
             using (ProgressDialog pd = new ProgressDialog("Upload", 5))
@@ -313,6 +387,13 @@ namespace PERevitTab.Forms
         private void UDPInterface_Load(object sender, EventArgs e)
         {
             CheckLogin();
+            CheckUser();
+            CheckProjectSelected();
+            CheckProjectsFetched();
+            if (_isProjectsFetched)
+            {
+                DisplayProjects(_projects);
+            }
             ReloadForm();
         }
 
@@ -327,19 +408,53 @@ namespace PERevitTab.Forms
                 return;
             }
 
+            HandleLogin();
+        }
+        private void HandleLogin()
+        {
             // check user credentials
             CheckLogin();
-
             if (_isLoggedIn)
             {
+                // get current user from sharepoint
                 _user = GetCurrentUser();
+                CheckUser();
                 if (_user == null)
                 {
+                    // disable the form if the user doesn't exist
                     DisableForm();
                     return;
                 }
+
+                // get projects from sharepoint
+                _projects = GetProjects();
+                CheckProjectsFetched();
+                if (_projects == null)
+                {
+                    return;
+                }
+
+                // display the projects in the dropdown box
+                DisplayProjects(_projects);
             }
 
+            // refresh the form
+            ReloadForm();
+        }
+
+        private void HandleLogout()
+        {
+            // clear the cache
+            SharepointConstants.Cache.username = null;
+            SharepointConstants.Cache.password = null;
+            SharepointConstants.Cache.user = null;
+            SharepointConstants.Cache.project = null;
+            SharepointConstants.Cache.projects = null;
+
+            CheckLogin();
+            CheckUser();
+            CheckProjectSelected();
+            CheckProjectsFetched();
             ReloadForm();
         }
         #endregion
@@ -355,17 +470,11 @@ namespace PERevitTab.Forms
 
             // show the form
             spLogin.ShowDialog();
-
-            if (spLogin.DialogResult == DialogResult.Cancel) return;
         }
 
         private void logoutButton_Click(object sender, EventArgs e)
         {
-            // reset cached username and password variables
-            SharepointConstants.Cache.username = null;
-            SharepointConstants.Cache.password = null;
-            CheckLogin();
-            ReloadForm();
+            HandleLogout();
         }
 
         private void syncButton_Click(object sender, EventArgs e)
