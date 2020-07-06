@@ -45,6 +45,7 @@
             this.downloadPowerBIButton = new System.Windows.Forms.Button();
             this.panel1 = new System.Windows.Forms.Panel();
             this.provideFeedback = new System.Windows.Forms.Button();
+            this.projectList = new System.Windows.Forms.ComboBox();
             this.loginPanel.SuspendLayout();
             this.tbdPanel.SuspendLayout();
             this.syncPanel.SuspendLayout();
@@ -57,6 +58,7 @@
             // loginPanel
             // 
             this.loginPanel.BackColor = System.Drawing.Color.LightPink;
+            this.loginPanel.Controls.Add(this.projectList);
             this.loginPanel.Controls.Add(this.logoutButton);
             this.loginPanel.Controls.Add(this.userLabel);
             this.loginPanel.Controls.Add(this.loginButton);
@@ -80,7 +82,7 @@
             // userLabel
             // 
             this.userLabel.Font = new System.Drawing.Font("Arial", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.userLabel.Location = new System.Drawing.Point(0, 142);
+            this.userLabel.Location = new System.Drawing.Point(0, 0);
             this.userLabel.Name = "userLabel";
             this.userLabel.Size = new System.Drawing.Size(200, 23);
             this.userLabel.TabIndex = 1;
@@ -238,6 +240,15 @@
             this.provideFeedback.UseVisualStyleBackColor = true;
             this.provideFeedback.Click += new System.EventHandler(this.provideFeedback_Click);
             // 
+            // projectList
+            // 
+            this.projectList.Anchor = System.Windows.Forms.AnchorStyles.Top;
+            this.projectList.FormattingEnabled = true;
+            this.projectList.Location = new System.Drawing.Point(10, 30);
+            this.projectList.Name = "projectList";
+            this.projectList.Size = new System.Drawing.Size(180, 21);
+            this.projectList.TabIndex = 3;
+            // 
             // UDPInterface
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -289,5 +300,6 @@
         private System.Windows.Forms.Button provideFeedback;
         private System.Windows.Forms.Label userLabel;
         private System.Windows.Forms.Button logoutButton;
+        private System.Windows.Forms.ComboBox projectList;
     }
 }
