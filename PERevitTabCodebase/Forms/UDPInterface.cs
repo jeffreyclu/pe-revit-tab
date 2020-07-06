@@ -121,92 +121,160 @@ namespace PERevitTab.Forms
         
         private List<Room> SyncToSharepoint()
         {
-            List<Room> syncedRooms = new List<Room>();
-
-            // get current revit rooms
-            IList<Element> collectedRooms = RevitMethods.GetElements(
-                _doc,
-                BuiltInCategory.OST_Rooms);
-            if (collectedRooms == null) return null;
-
-            // get items from SP list
-            SP.ListItemCollection spRooms = GetItemsFromSharepointList(
-                    SharepointConstants.Links.spReadList,
-                    SharepointConstants.Links.allItems);
-            if (spRooms == null) return null;
-
-            // get the latest phase
-            Phase latestPhase = RevitMethods.GetLatestPhase(_doc);
-            if (latestPhase == null) return null;
-
-            // check if room parameters exist
-            bool roomParamsExist = RevitMethods.CheckParametersExist(
-                collectedRooms,
-                SharepointConstants.Dictionaries.newRevitRoomParameters);
-
-            // if they don't exist
-            if (!roomParamsExist)
+            using (ProgressDialog pd = new ProgressDialog("Sync", 5))
             {
-                // make new parameters
-                Dictionary<string, ExternalDefinition> roomParametersCreated = RevitMethods.CreateSharedParameters(
-                        _doc,
-                        _app,
-                        SharepointConstants.Dictionaries.newRevitRoomParameters,
-                        BuiltInCategory.OST_Rooms,
-                        BuiltInParameterGroup.PG_REFERENCE);
-                if (roomParametersCreated == null) return null;
+                pd.Show();
+                List<Room> syncedRooms = new List<Room>();
 
-                // generate the rooms
-                syncedRooms = RevitMethods.CreateRooms(
+                // get current revit rooms
+                pd.StartTask("Collecting Revit rooms");
+                IList<Element> collectedRooms = RevitMethods.GetElements(
+                    _doc,
+                    BuiltInCategory.OST_Rooms);
+                if (collectedRooms == null) 
+                {
+                    pd.Close();
+                    return null;
+                }
+                pd.Increment();
+
+                // get items from SP list
+                pd.StartTask("Fetching Sharepoint data");
+                SP.ListItemCollection spRooms = GetItemsFromSharepointList(
+                        SharepointConstants.Links.spReadList,
+                        SharepointConstants.Links.allItems);
+                if (spRooms == null)
+                {
+                    pd.Close();
+                    return null;
+                }
+                pd.Increment();
+
+                // get the latest phase
+                pd.StartTask("Getting latest Revit phase");
+                Phase latestPhase = RevitMethods.GetLatestPhase(_doc);
+                if (latestPhase == null)
+                {
+                    pd.Close();
+                    return null;
+                }
+                pd.Increment();
+
+                // check if room parameters exist
+                pd.StartTask("Checking Revit parameters");
+                bool roomParamsExist = RevitMethods.CheckParametersExist(
+                    collectedRooms,
+                    SharepointConstants.Dictionaries.newRevitRoomParameters);
+                pd.Increment();
+
+                // if they don't exist
+                if (!roomParamsExist)
+                {
+                    // make new parameters
+                    Dictionary<string, ExternalDefinition> roomParametersCreated = RevitMethods.CreateSharedParameters(
+                            _doc,
+                            _app,
+                            SharepointConstants.Dictionaries.newRevitRoomParameters,
+                            BuiltInCategory.OST_Rooms,
+                            BuiltInParameterGroup.PG_REFERENCE);
+                    if (roomParametersCreated == null)
+                    {
+                        pd.Close();
+                        return null;
+                    }
+
+                    // generate the rooms
+                    pd.StartTask("Creating revit rooms");
+                    syncedRooms = RevitMethods.CreateRooms(
+                            _doc,
+                            latestPhase,
+                            spRooms,
+                            roomParametersCreated);
+                    pd.Increment();
+                }
+                else
+                {
+                    // sync the existing rooms
+                    pd.StartTask("Syncing revit rooms");
+                    syncedRooms = RevitMethods.UpdateRooms(
                         _doc,
                         latestPhase,
+                        collectedRooms,
                         spRooms,
-                        roomParametersCreated);
+                        SharepointConstants.Dictionaries.newRevitRoomParameters);
+                    pd.Increment();
+                }
+                return syncedRooms;
             }
-            else
-            {
-                // sync the existing rooms
-                syncedRooms = RevitMethods.UpdateRooms(
-                    _doc,
-                    latestPhase,
-                    collectedRooms,
-                    spRooms,
-                    SharepointConstants.Dictionaries.newRevitRoomParameters);
-            }
-            return syncedRooms;
         }
 
         private List<object> UploadToSharepoint()
         {
-            // collect rooms from the model, return false if there are none
-            IList<SpatialElement> placedRooms = RevitMethods.GetPlacedRooms(_doc);
-            if (placedRooms == null) return null;
+            using (ProgressDialog pd = new ProgressDialog("Upload", 5))
+            {
+                pd.Show();
+                // collect rooms from the model, return false if there are none
+                pd.StartTask("Collecting placed rooms");
+                IList<SpatialElement> placedRooms = RevitMethods.GetPlacedRooms(_doc);
+                if (placedRooms == null) 
+                {
+                    pd.Close();
+                    return null;
+                }
+                pd.Increment();
 
-            // check if the custom room parameters exist
-            bool roomParametersCheck = RevitMethods.CheckParametersExist(
-                placedRooms,
-                SharepointConstants.Dictionaries.newRevitRoomParameters);
-            if (roomParametersCheck == false) return null;
-
-            // collect the room info for writing to sharepoint
-            List<object> placedRoomsData = RevitMethods.ParseRoomData(
+                // check if the custom room parameters exist
+                pd.StartTask("Checking room parameters");
+                bool roomParametersCheck = RevitMethods.CheckParametersExist(
                     placedRooms,
                     SharepointConstants.Dictionaries.newRevitRoomParameters);
-            if (placedRoomsData == null) return null;
+                if (roomParametersCheck == false)
+                {
+                    pd.Close();
+                    return null;
+                }
+                pd.Increment();
 
-            SP.List SPWriteList = SharepointMethods.GetListFromWeb(
-                _context,
-                SharepointConstants.Links.spWriteList);
+                // collect the room info for writing to sharepoint
+                pd.StartTask("Parsing room data");
+                List<object> placedRoomsData = RevitMethods.ParseRoomData(
+                        placedRooms,
+                        SharepointConstants.Dictionaries.newRevitRoomParameters);
+                if (placedRoomsData == null)
+                {
+                    pd.Close();
+                    return null;
+                }
+                pd.Increment();
 
-            // write the room data to the write list
-            bool roomsUploaded = SharepointMethods.AddItemsToList(
-                _context, 
-                SPWriteList, 
-                placedRoomsData);
-            if (roomsUploaded == false) return null;
-            
-            // if we get to the end then return the written data
-            return placedRoomsData;
+                // retrieve write list from sharepoint
+                pd.StartTask("Connecting to Sharepoint");
+                SP.List SPWriteList = SharepointMethods.GetListFromWeb(
+                    _context,
+                    SharepointConstants.Links.spWriteList);
+                if (SPWriteList == null)
+                {
+                    pd.Close();
+                    return null;
+                }
+                pd.Increment();
+
+                // write the room data to the write list
+                pd.StartTask("Writing data to Sharepoint");
+                bool roomsUploaded = SharepointMethods.AddItemsToList(
+                    _context, 
+                    SPWriteList, 
+                    placedRoomsData);
+                if (roomsUploaded == false)
+                {
+                    pd.Close();
+                    return null;
+                }
+                pd.Increment();
+
+                // if we get to the end then return the written data
+                return placedRoomsData;
+            }
         }
         #endregion
 
