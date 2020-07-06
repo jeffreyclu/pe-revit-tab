@@ -24,6 +24,7 @@ using SP = Microsoft.SharePoint.Client;
 
 using PERevitTab.Commands.DT.UDP;
 using PERevitTab.Data;
+using Microsoft.Office.Interop.Excel;
 
 namespace PERevitTab.Forms
 {
@@ -32,10 +33,10 @@ namespace PERevitTab.Forms
     public partial class UDPInterface : System.Windows.Forms.Form
     {
         #region class variables
-        public static bool _isLoggedIn = false;
-        public static bool _isProjectChosen = false;
+        private bool _isLoggedIn = false;
         private string _username { get; set; }
         private SecureString _password { get; set; }
+        private SP.ListItem _user { get; set; }
         private string _lastSynced { get; set; }
         private Document _doc { get; set; }
         private Autodesk.Revit.ApplicationServices.Application _app { get; set; }
@@ -74,7 +75,9 @@ namespace PERevitTab.Forms
                 loginButton.Visible = false;
                 logoutButton.Visible = true;
                 userLabel.Visible = true;
-                userLabel.Text = _username;
+                userLabel.Text = _user == null
+                    ? _username
+                    : _user[SharepointConstants.ColumnHeaders.nickname].ToString();
                 syncButton.Enabled = true;
                 lastSyncedLabel.Visible = true;
                 uploadButton.Enabled = true;
@@ -90,6 +93,19 @@ namespace PERevitTab.Forms
                 uploadButton.Enabled = false;
                 viewProjectButton.Enabled = false;
             }
+        }
+        private void DisableForm()
+        {
+            loginButton.Visible = false;
+            logoutButton.Visible = true;
+            userLabel.Visible = true;
+            userLabel.Text = _user == null 
+                ? _username 
+                : _user[SharepointConstants.ColumnHeaders.nickname].ToString();
+            syncButton.Enabled = false;
+            lastSyncedLabel.Visible = false;
+            uploadButton.Enabled = false;
+            viewProjectButton.Enabled = false;
         }
 
         private SP.ListItemCollection GetItemsFromSharepointList(string listName, string viewName)
@@ -118,7 +134,21 @@ namespace PERevitTab.Forms
                 return null;
             }
         }
-        
+        private SP.ListItem GetCurrentUser()
+        {
+            // get all users from all users list
+            SP.ListItemCollection allUsers = GetItemsFromSharepointList(
+                SharepointConstants.Links.userListName,
+                SharepointConstants.Links.allItems);
+            if (allUsers == null)
+            {
+                return null;
+            }
+
+            // get the user matching the logged in user's email address
+            SP.ListItem currentUser = allUsers.Where(u => u.FieldValues["emailAddress"].ToString().ToLower() == _username.ToLower()).FirstOrDefault();
+            return currentUser;
+        }
         private List<Room> SyncToSharepoint()
         {
             using (ProgressDialog pd = new ProgressDialog("Sync", 5))
@@ -287,7 +317,28 @@ namespace PERevitTab.Forms
 
         private void SPLoginClosed (object sender, EventArgs e)
         {
+            // cast sender as a form
+            System.Windows.Forms.Form form = sender as System.Windows.Forms.Form;
+
+            // check if user cancelled login
+            if (form.DialogResult == DialogResult.Cancel)
+            {
+                return;
+            }
+
+            // check user credentials
             CheckLogin();
+
+            if (_isLoggedIn)
+            {
+                _user = GetCurrentUser();
+                if (_user == null)
+                {
+                    DisableForm();
+                    return;
+                }
+            }
+
             ReloadForm();
         }
         #endregion
@@ -303,6 +354,8 @@ namespace PERevitTab.Forms
 
             // show the form
             spLogin.ShowDialog();
+
+            if (spLogin.DialogResult == DialogResult.Cancel) return;
         }
 
         private void logoutButton_Click(object sender, EventArgs e)
