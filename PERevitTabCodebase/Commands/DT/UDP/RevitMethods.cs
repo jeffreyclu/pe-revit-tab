@@ -62,6 +62,26 @@ namespace PERevitTab.Commands.DT.UDP
                 return null;
             }
         }
+        public static IList<SpatialElement> GetUnplacedRooms(Document doc)
+        {
+            try
+            {
+                // retrieve only unplaced rooms (i.e. where area is 0 and location is null)
+                IList<SpatialElement> placedRooms = new FilteredElementCollector(doc)
+                    .OfCategory(BuiltInCategory.OST_Rooms)
+                    .WhereElementIsNotElementType()
+                    .Cast<SpatialElement>()
+                    .Where(r => r.Area == 0 && r.Location == null)
+                    .ToList();
+
+                return placedRooms;
+            }
+            catch (Exception e)
+            {
+                WF.MessageBox.Show($"Error in RevitMethods.GetPlacedRooms: {e}");
+                return null;
+            }
+        }
         public static PhaseArray GetPhases(Document doc)
         {
             try
