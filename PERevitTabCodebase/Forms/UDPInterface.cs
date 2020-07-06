@@ -96,6 +96,7 @@ namespace PERevitTab.Forms
         }
         private void DisableForm()
         {
+            // TODO prompt user to request access
             loginButton.Visible = false;
             logoutButton.Visible = true;
             userLabel.Visible = true;
