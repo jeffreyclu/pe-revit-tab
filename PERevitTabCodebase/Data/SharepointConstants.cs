@@ -1,5 +1,6 @@
 ﻿#region autodesk libraries
 using Autodesk.Revit.DB;
+using Microsoft.SharePoint.Client;
 #endregion
 
 #region system libraries
@@ -12,6 +13,8 @@ using System.Text;
 using System.Threading.Tasks;
 #endregion
 
+using SP = Microsoft.SharePoint.Client;
+
 namespace PERevitTab.Data
 {
     public class SharepointConstants
@@ -20,15 +23,22 @@ namespace PERevitTab.Data
         {
             public static string username { get; set; }
             public static SecureString password { get; set; }
+            public static SP.ListItem user { get; set; }
+            public static SP.ListItem project { get; set; }
+            public static SP.ListItemCollection projects { get; set; }
         }
         public static class Links
         {
             public static string siteUrl = @"https://perkinseastman.sharepoint.com/sites/Grove";
             public static string spReadList = @"cp_published_volumes";
             public static string spWriteList = @"cp_revit_volumes";
-            public static string userListName = @"translatedUser";
-            public static string projectListName = @"projects";
-            public static string projectPermissionsListName = @"cp_project_permissions";
+            public static string userList = @"translatedUser";
+            public static string projectList = @"projects";
+            public static string projectPermissionsList = @"cp_project_permissions";
+        }
+
+        public static class Views
+        {
             public static string allItems = "All Items";
         }
         public static class ColumnHeaders
@@ -92,6 +102,10 @@ namespace PERevitTab.Data
             #region translatedUser
             public static string emailAddress = "emailAddress";
             public static string nickname = "nickname";
+            #endregion
+
+            #region projects
+            public static string projectNumber = "projectNumber";
             #endregion
         }
         public static class Dictionaries
