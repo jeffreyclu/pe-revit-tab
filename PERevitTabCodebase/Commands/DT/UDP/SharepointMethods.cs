@@ -1,8 +1,10 @@
 ﻿#region system libraries
+using Microsoft.SharePoint.Client;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security;
+using System.Security.Policy;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -58,18 +60,56 @@ namespace PERevitTab.Commands.DT.UDP
                 Console.Write(field.InternalName);
             }
         }
+        public static SP.ListItem GetItem(SP.ListItemCollection items, string columnHeader, string searchValue)
+        {
+            if (!items.First().FieldValues.ContainsKey(columnHeader))
+            {
+                return null;
+            }
+            return items.Where(i => i[columnHeader].ToString() == searchValue).FirstOrDefault();
+        }
+        public static IEnumerable<SP.ListItem> GetItems(SP.ListItemCollection items, string columnHeader, string searchValue)
+        {
+            if (!items.First().FieldValues.ContainsKey(columnHeader))
+            {
+                return null;
+            }
+            return items.Where(i => i[columnHeader].ToString() == searchValue);
+        }
         #endregion
 
         #region "set" methods
-        public static bool AddItemsToList(SP.ClientContext context, SP.List list, List<object> rooms)
+        public static SP.ListItem AddItemToList(SP.ClientContext context, SP.List list, Dictionary<string, string> item)
         {
             try
             {
-                foreach (Dictionary<string, string> room in rooms)
+
+                SP.ListItemCreationInformation itemCreationInfo = new SP.ListItemCreationInformation();
+                SP.ListItem newItem = list.AddItem(itemCreationInfo);
+                foreach (KeyValuePair<string, string> entry in item)
+                {
+                    newItem[entry.Key] = entry.Value;
+                }
+                newItem.Update();
+                context.Load(newItem);
+                context.ExecuteQuery();
+                return newItem;
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show($"Error in SharepointMethods.AddItemToList: {e}");
+                return null;
+            }
+        }
+        public static bool AddItemsToList(SP.ClientContext context, SP.List list, List<Dictionary<string, string>> items)
+        {
+            try
+            {
+                foreach (Dictionary<string, string> item in items)
                 {
                     SP.ListItemCreationInformation itemCreationInfo = new SP.ListItemCreationInformation();
                     SP.ListItem newItem = list.AddItem(itemCreationInfo);
-                    foreach (KeyValuePair<string, string> entry in room)
+                    foreach (KeyValuePair<string, string> entry in item)
                     {
                         newItem[entry.Key] = entry.Value;
                     }
@@ -80,7 +120,7 @@ namespace PERevitTab.Commands.DT.UDP
             }
             catch (Exception e)
             {
-                MessageBox.Show(e.ToString());
+                MessageBox.Show($"Error in SharepointMethods.AddItemsToList: {e}");
                 return false;
             }
         }
@@ -113,6 +153,10 @@ namespace PERevitTab.Commands.DT.UDP
                 return false;
             }
         }
+        #endregion
+
+        #region UDP specific
+        
         #endregion
     }
 }

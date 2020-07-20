@@ -26,6 +26,14 @@ namespace PERevitTab.Data
             public static SP.ListItem user { get; set; }
             public static SP.ListItem project { get; set; }
             public static SP.ListItemCollection projects { get; set; }
+            public static void ClearCache()
+            {
+                username = null;
+                password = null;
+                user = null;
+                project = null;
+                projects = null;
+            }
         }
         public static class Links
         {
@@ -34,7 +42,9 @@ namespace PERevitTab.Data
             public static string spWriteList = @"cp_revit_volumes";
             public static string userList = @"translatedUser";
             public static string projectList = @"projects";
+            public static string linkedProjectList = @"cp_revit_models";
             public static string projectPermissionsList = @"cp_project_permissions";
+            public static string transactionsList = @"cp_transactions";
         }
 
         public static class Views
@@ -91,7 +101,7 @@ namespace PERevitTab.Data
             public static string vol_volume_sort = "vol_volume_sort";
             public static string comments = "comments";
             public static string Title = "Title";
-            public static string id = "id";
+            public static string ID = "ID";
             public static string vol_Title = "vol_Title";
             public static string revit_room_number = "revit_room_number";
             public static string revit_room_element_id = "revit_room_element_id";
@@ -106,6 +116,18 @@ namespace PERevitTab.Data
 
             #region projects
             public static string projectNumber = "projectNumber";
+            #endregion
+
+            #region linked projects
+            public static string project_id = "project_id";
+            public static string revit_version = "revit_version";
+            public static string is_central_model = "is_central_model";
+            public static string central_model_path = "central_model_path";
+            public static string transaction_id = "transaction_id";
+            #endregion
+
+            #region transactions
+            public static string transaction_type_id = "transaction_type_id";
             #endregion
         }
         public static class Dictionaries

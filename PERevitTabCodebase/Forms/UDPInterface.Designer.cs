@@ -29,6 +29,8 @@
         private void InitializeComponent()
         {
             this.loginPanel = new System.Windows.Forms.Panel();
+            this.linkProjectButton = new System.Windows.Forms.Button();
+            this.projectList = new System.Windows.Forms.ComboBox();
             this.logoutButton = new System.Windows.Forms.Button();
             this.userLabel = new System.Windows.Forms.Label();
             this.loginButton = new System.Windows.Forms.Button();
@@ -45,7 +47,7 @@
             this.downloadPowerBIButton = new System.Windows.Forms.Button();
             this.panel1 = new System.Windows.Forms.Panel();
             this.provideFeedback = new System.Windows.Forms.Button();
-            this.projectList = new System.Windows.Forms.ComboBox();
+            this.linkedProjectLabel = new System.Windows.Forms.Label();
             this.loginPanel.SuspendLayout();
             this.tbdPanel.SuspendLayout();
             this.syncPanel.SuspendLayout();
@@ -58,6 +60,8 @@
             // loginPanel
             // 
             this.loginPanel.BackColor = System.Drawing.Color.LightPink;
+            this.loginPanel.Controls.Add(this.linkedProjectLabel);
+            this.loginPanel.Controls.Add(this.linkProjectButton);
             this.loginPanel.Controls.Add(this.projectList);
             this.loginPanel.Controls.Add(this.logoutButton);
             this.loginPanel.Controls.Add(this.userLabel);
@@ -66,6 +70,27 @@
             this.loginPanel.Name = "loginPanel";
             this.loginPanel.Size = new System.Drawing.Size(200, 200);
             this.loginPanel.TabIndex = 0;
+            // 
+            // linkProjectButton
+            // 
+            this.linkProjectButton.AutoSize = true;
+            this.linkProjectButton.Font = new System.Drawing.Font("Arial", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.linkProjectButton.Location = new System.Drawing.Point(0, 62);
+            this.linkProjectButton.Name = "linkProjectButton";
+            this.linkProjectButton.Size = new System.Drawing.Size(200, 32);
+            this.linkProjectButton.TabIndex = 4;
+            this.linkProjectButton.Text = "Link Project";
+            this.linkProjectButton.UseVisualStyleBackColor = true;
+            this.linkProjectButton.Click += new System.EventHandler(this.linkProjectButton_Click);
+            // 
+            // projectList
+            // 
+            this.projectList.Anchor = System.Windows.Forms.AnchorStyles.Top;
+            this.projectList.FormattingEnabled = true;
+            this.projectList.Location = new System.Drawing.Point(10, 30);
+            this.projectList.Name = "projectList";
+            this.projectList.Size = new System.Drawing.Size(180, 21);
+            this.projectList.TabIndex = 3;
             // 
             // logoutButton
             // 
@@ -240,14 +265,15 @@
             this.provideFeedback.UseVisualStyleBackColor = true;
             this.provideFeedback.Click += new System.EventHandler(this.provideFeedback_Click);
             // 
-            // projectList
+            // linkedProjectLabel
             // 
-            this.projectList.Anchor = System.Windows.Forms.AnchorStyles.Top;
-            this.projectList.FormattingEnabled = true;
-            this.projectList.Location = new System.Drawing.Point(10, 30);
-            this.projectList.Name = "projectList";
-            this.projectList.Size = new System.Drawing.Size(180, 21);
-            this.projectList.TabIndex = 3;
+            this.linkedProjectLabel.Font = new System.Drawing.Font("Arial", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.linkedProjectLabel.Location = new System.Drawing.Point(0, 28);
+            this.linkedProjectLabel.Name = "linkedProjectLabel";
+            this.linkedProjectLabel.Size = new System.Drawing.Size(200, 23);
+            this.linkedProjectLabel.TabIndex = 5;
+            this.linkedProjectLabel.Text = "Linked Project";
+            this.linkedProjectLabel.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // UDPInterface
             // 
@@ -301,5 +327,7 @@
         private System.Windows.Forms.Label userLabel;
         private System.Windows.Forms.Button logoutButton;
         private System.Windows.Forms.ComboBox projectList;
+        private System.Windows.Forms.Button linkProjectButton;
+        private System.Windows.Forms.Label linkedProjectLabel;
     }
 }

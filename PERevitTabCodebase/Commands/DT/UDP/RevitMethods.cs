@@ -38,7 +38,7 @@ namespace PERevitTab.Commands.DT.UDP
             }
             catch (Exception e)
             {
-                WF.MessageBox.Show($"Error in RevitMethods.GetRooms: {e}");
+                WF.MessageBox.Show($"Error in RevitMethods.GetElements: {e}");
                 return null;
             }
         }
@@ -107,12 +107,12 @@ namespace PERevitTab.Commands.DT.UDP
                 return null;
             }
         }
-        public static List<object> ParseRoomData(IList<SpatialElement> rooms, Dictionary<string, ParameterType> parameterTypeMappings)
+        public static List<Dictionary<string, string>> ParseRoomData(IList<SpatialElement> rooms, Dictionary<string, ParameterType> parameterTypeMappings)
         {
             try
             {
                 // instantiate a list of objects to hold our room information (which will be a Dictionary<string, string>)
-                List<object> roomsList = new List<object>();
+                List<Dictionary<string, string>> roomsList = new List<Dictionary<string, string>>();
 
                 // loop through the collected rooms
                 foreach (SpatialElement r in rooms)
@@ -458,7 +458,7 @@ namespace PERevitTab.Commands.DT.UDP
                 return false;
             }
         }
-        public static List<Room> CreateRooms(Document doc, Phase phase, SP.ListItemCollection spListItems, Dictionary<string, ExternalDefinition> parameterList)
+        public static List<Room> CreateRooms(Document doc, Phase phase, IEnumerable<SP.ListItem> spListItems, Dictionary<string, ExternalDefinition> parameterList)
         {
             using (Transaction t = new Transaction(doc))
             {
@@ -500,7 +500,7 @@ namespace PERevitTab.Commands.DT.UDP
                 }
             }
         }
-        public static List<Room> UpdateRooms(Document doc, Phase phase, IList<Element> rooms, SP.ListItemCollection spListItems, Dictionary<string, ParameterType> parameterTypeMappings)
+        public static List<Room> UpdateRooms(Document doc, Phase phase, IList<Element> rooms, IEnumerable<SP.ListItem> spListItems, Dictionary<string, ParameterType> parameterTypeMappings)
         {
             using (Transaction t = new Transaction(doc))
             {
