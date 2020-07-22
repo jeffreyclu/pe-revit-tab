@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 #endregion
 
 namespace PERevitTab.Commands.DT
@@ -33,7 +34,8 @@ namespace PERevitTab.Commands.DT
                 }
                 else
                 {
-                    throw new Exception("Worksharing is not enabled in the document. Enable collaboration and try again.");
+                    MessageBox.Show("Worksharing is not enabled in the document. Enable collaboration and try again.", "Error:");
+                    return Result.Failed;
                 }
             }
             catch (Exception err)
