@@ -20,9 +20,8 @@ using SP = Microsoft.SharePoint.Client;
 #endregion
 
 using PERevitTab.Data;
-using Microsoft.SharePoint.Client;
 
-namespace PERevitTab.Commands.DT.UDP
+namespace PERevitTab.CommonMethods
 {
     class RevitMethods
     {
@@ -198,6 +197,150 @@ namespace PERevitTab.Commands.DT.UDP
                 if (first.LookupParameter(pName) == null) return false;
             }
             return true;
+        }
+
+        /// <summary>
+        /// Collects non-RVT link and imports
+        /// </summary>
+        /// <param name="doc">The active document</param>
+        /// <returns>Dictionary</returns>
+        public static Dictionary<string, IList<Element>> NonRVTLinkCollector(Document doc)
+        {
+            // initiate a dictionary of element lists to hold collected links
+            Dictionary<string, IList<Element>> linkDictionary = new Dictionary<string, IList<Element>>()
+            {
+                { RevitConstants.Strings.linkedCAD, new List<Element>() },
+                { RevitConstants.Strings.importedCAD, new List<Element>() },
+                { RevitConstants.Strings.importedSKP, new List<Element>() },
+            };
+
+            // collect all import instances
+            FilteredElementCollector importInstances = new FilteredElementCollector(doc).OfClass(typeof(ImportInstance)).WhereElementIsNotElementType();
+
+            // loop through the import instances
+            foreach (Element i in importInstances)
+            {
+                // get the type of the import instance
+                CADLinkType linkType = doc.GetElement(i.GetTypeId()) as CADLinkType;
+
+                // if it's an external file reference, then it is a linked CAD
+                if (linkType.IsExternalFileReference())
+                {
+                    linkDictionary[RevitConstants.Strings.linkedCAD].Add(i);
+                }
+                // if it is NOT an external file reference and the type name contains ".skp", then it is is an imported SKP
+                else if (!linkType.IsExternalFileReference() && linkType.Name.Contains(".skp"))
+                {
+                    linkDictionary[RevitConstants.Strings.importedSKP].Add(i);
+                }
+                // if it is NOT an external file reference and the type name DOESN'T contain ".skp", then it is is an imported CAD
+                else if (!linkType.IsExternalFileReference() && !linkType.Name.Contains(".skp"))
+                {
+                    linkDictionary[RevitConstants.Strings.importedCAD].Add(i);
+                }
+            }
+            // return
+            return linkDictionary;
+        }
+        /// <summary>
+        /// Collects unplaced views by cross-referencing all views against views that are on sheets
+        /// </summary>
+        /// <param name="doc">The active document</param>
+        /// <param name="sheets">List of sheets</param>
+        /// <returns>IList</returns>
+        public static IList<View> UnplacedViewCollector(Document doc, IList<Element> sheets)
+        {
+            ICollection<ElementId> placedViewIds = new List<ElementId>(); // initiliaze an empty collection to hold element ids
+            foreach (ViewSheet sheet in sheets)
+            {
+                ISet<ElementId> currentPlacedViewIds = sheet.GetAllPlacedViews();
+                foreach (ElementId eId in currentPlacedViewIds)
+                {
+                    placedViewIds.Add(eId); // add all placed ids of views placed on sheets to element ids collection
+                }
+            }
+            ExclusionFilter placedViewsFilter = new ExclusionFilter(placedViewIds); // generate exclusion filter using placed view ids
+            IList<View> unplacedViews = new FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_Views).WherePasses(placedViewsFilter).Cast<View>().Where(v => !v.IsTemplate).ToList(); // add exclusion filter to filtered element collector of views
+
+            return unplacedViews;
+        }
+        /// <summary>
+        /// Collects redundant elements based on the redundant elements warning from the active document
+        /// </summary>
+        /// <param name="warnings">List of warnings</param>
+        /// <param name="doc">The active document</param>
+        /// <returns>IList</returns>
+        public static IList<Element> RedundantElementsCollector(IList<FailureMessage> warnings, Document doc)
+        {
+            IList<Element> redundantElements = new List<Element>();
+            ICollection<ElementId> redundantElementIds = new List<ElementId>(); // initalize empty list to hold redundant elements
+            foreach (FailureMessage failMsg in warnings)
+            {
+                if (failMsg.GetFailureDefinitionId().Guid == RevitConstants.Guids.redundantFailMsgGuid) // check if elements causing warnings match the redundant element warning
+                {
+                    ICollection<ElementId> eleIds = failMsg.GetFailingElements();
+                    foreach (ElementId eId in eleIds)
+                    {
+                        Element redundantElement = doc.GetElement(eId); // retrieve element based on its ID
+                        redundantElements.Add(redundantElement); // add each element to the redundant elements list
+                    }
+                }
+            }
+            return redundantElements;
+        }
+        /// <summary>
+        /// Gets unused family types (family symbols) from the active document
+        /// </summary>
+        /// <param name="doc">The active document</param>
+        /// <returns>IList</returns>
+        public static IList<Element> UnusedFamiliesCollector(Document doc)
+        {
+            IList<Element> familyInstances = new FilteredElementCollector(doc).OfClass(typeof(FamilyInstance)).WhereElementIsNotElementType().ToList(); // get all family instances
+            Dictionary<ElementId, IList<Element>> usedFamilyTypesDictionary = new Dictionary<ElementId, IList<Element>>(); // create a dictionary of type ids
+            foreach (Element f in familyInstances)
+            {
+                ElementId key = f.GetTypeId(); // use the typeid as the key and check if the key exists in the dictionary
+                if (!usedFamilyTypesDictionary.ContainsKey(key))
+                {
+                    IList<Element> elements = new List<Element>();
+                    usedFamilyTypesDictionary.Add(key, elements); // initialize an entry with an empty list of elements as the value
+                }
+                usedFamilyTypesDictionary[key].Add(f); // add element to the list of elements at the key of the element's type id
+            }
+            IList<Element> unusedFamilySymbols = new List<Element>(); // initalize empty list of elements to hold unused family symbols
+            IList<Element> familySymbols = new FilteredElementCollector(doc).OfClass(typeof(FamilySymbol)).WhereElementIsElementType().ToList(); // get all family symbols
+            foreach (Element f in familySymbols) // loop through family symbol types and retrieve the id for each family symbol
+            {
+                ElementId key = f.Id; // set the family symbol type id as the key to search for
+                if (!usedFamilyTypesDictionary.ContainsKey(key)) // check the dictionary of placed family types contains the key
+                {
+                    unusedFamilySymbols.Add(f); // if no, add it to the list to return
+                }
+            }
+            return unusedFamilySymbols;
+        }
+        /// <summary>
+        /// Retrieves the active document's path, name, and size
+        /// </summary>
+        /// <param name="doc">The active document</param>
+        /// <returns>Tuple</returns>
+        public static (string path, string name, string size) GetModelInfo(Document doc)
+        {
+
+            string modelPath = doc.PathName;
+            if (doc.IsWorkshared)
+            {
+                modelPath = ModelPathUtils.ConvertModelPathToUserVisiblePath(doc.GetWorksharingCentralModelPath());
+            }
+            string modelName = doc.Title;
+            string modelSize = "unknown";
+            StringBuilder output = new StringBuilder();
+            if (File.Exists(modelPath))
+            {
+                var f = new FileInfo(modelPath);
+                modelSize = (f.Length / 1024 / 1024).ToString("#.##");
+            }
+            return (modelPath, modelName, modelSize);
         }
         #endregion
 
@@ -511,7 +654,7 @@ namespace PERevitTab.Commands.DT.UDP
                     List<Room> syncedRooms = new List<Room>();
 
                     // iterate through sharepoint list
-                    foreach (ListItem listItem in spListItems)
+                    foreach (SP.ListItem listItem in spListItems)
                     {
                         string vif_id = SharepointConstants.ColumnHeaders.vif_id;
                         foreach (Room r in rooms)

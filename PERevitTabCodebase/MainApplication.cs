@@ -122,7 +122,7 @@ namespace PERevitTab
                 #endregion
 
                 #region idling event
-                // uiCtrlApp.Idling += OnIdling;
+                uiCtrlApp.Idling += OnIdling;
                 #endregion
             }
             catch (Exception err)

@@ -2,6 +2,7 @@
 using Autodesk.Revit.Attributes;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
+using PERevitTab.Data;
 #endregion
 
 #region system libraries
@@ -46,7 +47,7 @@ namespace PERevitTab.Forms
             // MessageBox.Show("Select a workset list", "Workset Creator");
             label3.Visible = false;
             listBox1.Visible = false;
-            openFileDialog1.InitialDirectory = @"C:\Users\j.lu\source\repos\pe-revit-tab\PERevitTabCodebase\Assets\Excel";
+            openFileDialog1.InitialDirectory =WorksetCreatorConstants.worksetTemplatesLocation;
             openFileDialog1.Title = "Select workset template:";
 
             if (openFileDialog1.ShowDialog() == DialogResult.OK)
@@ -61,7 +62,7 @@ namespace PERevitTab.Forms
                         filePath = openFileDialog1.FileName;
                         if (filePath == null)
                         {
-                            MessageBox.Show("Illegal filepath.");
+                            TaskDialog.Show("Error", "Illegal filepath.");
                             pd.Close();
                             Close();
                             return;
@@ -71,16 +72,16 @@ namespace PERevitTab.Forms
                         // open the excel file and extract workset names
                         pd.StartTask("Getting workset names.");
                         worksetDictionary = GenerateWorksetNames(filePath);
-                        if (worksetDictionary["newWorksets"].Count == 0 && worksetDictionary["existingWorksets"].Count == 0)
+                        if (worksetDictionary[WorksetCreatorConstants.newWorksets].Count == 0 && worksetDictionary[WorksetCreatorConstants.existingWorksets].Count == 0)
                         {
-                            MessageBox.Show("No workset names found", "Error");
+                            TaskDialog.Show("Error", "No workset names found. Aborting.");
                             pd.Close();
                             Close();
                             return;
                         }
-                        else if (worksetDictionary["newWorksets"].Count == 0 && worksetDictionary["existingWorksets"].Count > 0)
+                        else if (worksetDictionary[WorksetCreatorConstants.newWorksets].Count == 0 && worksetDictionary[WorksetCreatorConstants.existingWorksets].Count > 0)
                         {
-                            MessageBox.Show("No new workset names found", "Error");
+                            TaskDialog.Show("Error", "No new workset names found. Aborting.");
                             pd.Close();
                             Close();
                             return;
@@ -88,13 +89,13 @@ namespace PERevitTab.Forms
                         pd.Increment();
 
                         pd.StartTask("Checking for existing worksets");
-                        if (worksetDictionary["existingWorksets"].Count > 0)
+                        if (worksetDictionary[WorksetCreatorConstants.existingWorksets].Count > 0)
                         {
-                            MessageBox.Show($"{worksetDictionary["existingWorksets"].Count} worksets already exist. These will be ignored.", "Warning:");
+                            TaskDialog.Show("Warning", $"{worksetDictionary[WorksetCreatorConstants.existingWorksets].Count} worksets already exist. These will be ignored.");
                             checkedListBox1.Height = 364;
                             label3.Visible = true;
                             listBox1.Visible = true;
-                            foreach (object w in worksetDictionary["existingWorksets"])
+                            foreach (object w in worksetDictionary[WorksetCreatorConstants.existingWorksets])
                             {
                                 listBox1.Items.Add(w);
                             }
@@ -102,13 +103,13 @@ namespace PERevitTab.Forms
                         pd.Increment();
 
                         pd.StartTask("Checking workset names.");
-                        foreach (object w in worksetDictionary["newWorksets"])
+                        foreach (object w in worksetDictionary[WorksetCreatorConstants.newWorksets])
                         {
                             foreach (string c in illegalChars)
                             {
                                 if (w.ToString().Contains(c)) 
                                 {
-                                    MessageBox.Show($"Illegal character detected in workset name '{w}'. Workset name cannot contain any of the following chracters: \\:{{}}[]|;<>?`~", "Error:");
+                                    TaskDialog.Show("Error", $"Illegal character detected in workset name '{w}'. Workset name cannot contain any of the following chracters: \\ : {{ }} [ ] | ; < > ? ` ~");
                                     pd.Close();
                                     Close();
                                     return;
@@ -141,8 +142,8 @@ namespace PERevitTab.Forms
             // initialize a dictionary of object[] to hold workset names
             Dictionary<string, List<object>> worksetDictionary = new Dictionary<string, List<object>>()
             {
-                { "newWorksets", new List<object>() },
-                { "existingWorksets", new List<object>() },
+                { WorksetCreatorConstants.newWorksets, new List<object>() },
+                { WorksetCreatorConstants.existingWorksets, new List<object>() },
             };
 
             // collect all user created worksets from the revit document
@@ -160,11 +161,11 @@ namespace PERevitTab.Forms
                     // see if the excel workset already exists in revit
                     if (revitWorksets.Where(w => w.Name == worksetName).FirstOrDefault() == null)
                     {
-                        worksetDictionary["newWorksets"].Add(worksetName);
+                        worksetDictionary[WorksetCreatorConstants.newWorksets].Add(worksetName);
                     }
                     else
                     {
-                        worksetDictionary["existingWorksets"].Add(worksetName);
+                        worksetDictionary[WorksetCreatorConstants.existingWorksets].Add(worksetName);
                     }
                 }
                 else 

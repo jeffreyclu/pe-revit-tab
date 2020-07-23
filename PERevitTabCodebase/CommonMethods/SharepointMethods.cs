@@ -1,5 +1,4 @@
 ﻿#region system libraries
-using Microsoft.SharePoint.Client;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,11 +9,11 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 #endregion
 
-#region microsoft variables
+#region microsoft libraries
 using SP = Microsoft.SharePoint.Client;
 #endregion
 
-namespace PERevitTab.Commands.DT.UDP
+namespace PERevitTab.CommonMethods
 {
     class SharepointMethods
     {

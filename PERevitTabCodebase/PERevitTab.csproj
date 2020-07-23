@@ -81,10 +81,13 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Commands\DT\UDPLauncher.cs" />
-    <Compile Include="Commands\DT\UDP\RevitMethods.cs" />
-    <Compile Include="Commands\DT\UDP\SharepointMethods.cs" />
+    <Compile Include="CommonMethods\RevitMethods.cs" />
+    <Compile Include="CommonMethods\SharepointMethods.cs" />
     <Compile Include="Commands\DU\RunDynamo4.cs" />
+    <Compile Include="CommonMethods\UtilityMethods.cs" />
+    <Compile Include="Data\RevitConstants.cs" />
     <Compile Include="Data\SharepointConstants.cs" />
+    <Compile Include="Data\WorksetCreatorConstants.cs" />
     <Compile Include="Forms\ProgressDialog.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -143,7 +146,6 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="Assets\Excel\worksets.xlsx" />
     <None Include="app.config" />
     <None Include="packages.config" />
     <None Include="PERevitTab.addin">
@@ -156,6 +158,7 @@
     <Resource Include="Assets\Images\worksetCreatorBtn.png" />
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="Assets\Excel\" />
     <Folder Include="Build\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
